@@ -6,6 +6,12 @@ interface PlanData {
   name: string;
   users: number;
   connections: number;
+  connectionsWhatsapp?: number;
+  connectionsWhatsappCloud?: number;
+  connectionsInstagram?: number;
+  connectionsTelegram?: number;
+  connectionsEmail?: number;
+  connectionsWavoip?: number;
   queues: number;
   value: number;
   currency?: string;

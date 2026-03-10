@@ -30,6 +30,24 @@ class Plan extends Model<Plan> {
   connections: number;
 
   @Column
+  connectionsWhatsapp: number;
+
+  @Column
+  connectionsWhatsappCloud: number;
+
+  @Column
+  connectionsInstagram: number;
+
+  @Column
+  connectionsTelegram: number;
+
+  @Column
+  connectionsEmail: number;
+
+  @Column
+  connectionsWavoip: number;
+
+  @Column
   queues: number;
 
   @Column

@@ -34,6 +34,7 @@ import i18nRoutes from "./i18nRoutes";
 import wavoipRoutes from "./wavoipRoutes";
 import metaWebhookRoutes from "./metaWebhookRoutes";
 import telegramRoutes from "./telegramRoutes";
+import apiRoutes from "./apiRoutes";
 
 const routes = Router();
 
@@ -72,5 +73,6 @@ routes.use(i18nRoutes);
 routes.use(wavoipRoutes);
 routes.use(metaWebhookRoutes);
 routes.use(telegramRoutes);
+routes.use(apiRoutes);
 
 export default routes;

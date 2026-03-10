@@ -85,6 +85,16 @@ const CreateWhatsAppService = async ({
   });
 
   if (company !== null) {
+    const allWhatsappsCount = await Whatsapp.count({
+      where: { companyId }
+    });
+
+    if (allWhatsappsCount >= company.plan.connections) {
+      throw new AppError(
+        `Número global de conexões já alcançado: ${allWhatsappsCount}`
+      );
+    }
+
     const whatsappCount = await Whatsapp.count({
       where: {
         companyId,
@@ -92,9 +102,24 @@ const CreateWhatsAppService = async ({
       }
     });
 
-    if (whatsappCount >= company.plan.connections) {
+    let planChannelLimit = company.plan.connections;
+    if (channel === "whatsapp" && company.plan.connectionsWhatsapp !== null) {
+       planChannelLimit = company.plan.connectionsWhatsapp;
+    } else if (channel === "whatsapp_cloud" && company.plan.connectionsWhatsappCloud !== null) {
+       planChannelLimit = company.plan.connectionsWhatsappCloud;
+    } else if (channel === "instagram" && company.plan.connectionsInstagram !== null) {
+       planChannelLimit = company.plan.connectionsInstagram;
+    } else if (channel === "telegram" && company.plan.connectionsTelegram !== null) {
+       planChannelLimit = company.plan.connectionsTelegram;
+    } else if (channel === "email" && company.plan.connectionsEmail !== null) {
+       planChannelLimit = company.plan.connectionsEmail;
+    } else if (channel === "wavoip" && company.plan.connectionsWavoip !== null) {
+       planChannelLimit = company.plan.connectionsWavoip;
+    }
+
+    if (whatsappCount >= planChannelLimit) {
       throw new AppError(
-        `Número máximo de conexões já alcançado: ${whatsappCount}`
+        `Número máximo de conexões para o canal ${channel} já alcançado: ${whatsappCount}`
       );
     }
   }

@@ -145,13 +145,21 @@ export async function processWaCloudWebhook(
         const msgId: string = msg.id;
         const type: string = msg.type;
 
-        // Resolve contact name
         const waContact = metaContacts.find((c: any) => c.wa_id === from);
         const contactName = waContact?.profile?.name || from;
 
+        let numberVariants = [from];
+        if (from.startsWith("55") && (from.length === 12 || from.length === 13)) {
+          if (from.length === 12) {
+            numberVariants.push(`${from.slice(0, 4)}9${from.slice(4)}`);
+          } else {
+            numberVariants.push(`${from.slice(0, 4)}${from.slice(5)}`);
+          }
+        }
+
         // Find or create contact — channel is determined by session, not contact
         let contact = await Contact.findOne({
-          where: { number: from, companyId: whatsapp.companyId }
+          where: { number: numberVariants, companyId: whatsapp.companyId }
         });
         if (!contact) {
           contact = await Contact.create({

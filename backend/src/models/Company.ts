@@ -64,6 +64,12 @@ class Company extends Model<Company> {
   @Column
   language: string;
 
+  @Column
+  apiAccessToken: string;
+
+  @Column
+  apiSecretToken: string;
+
   @CreatedAt
   createdAt: Date;
 

@@ -32,6 +32,8 @@ type CompanyData = {
   campaignsEnabled?: boolean;
   dueDate?: string;
   recurrence?: string;
+  apiAccessToken?: string;
+  apiSecretToken?: string;
 };
 
 type SchedulesData = {

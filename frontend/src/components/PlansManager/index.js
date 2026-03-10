@@ -77,6 +77,12 @@ export function PlanManagerForm(props) {
         name: '',
         users: 0,
         connections: 0,
+        connectionsWhatsapp: 0,
+        connectionsWhatsappCloud: 0,
+        connectionsInstagram: 0,
+        connectionsTelegram: 0,
+        connectionsEmail: 0,
+        connectionsWavoip: 0,
         queues: 0,
         value: 0,
         currency: "",
@@ -117,71 +123,71 @@ export function PlanManagerForm(props) {
                             />
                         </Grid>
                         <Grid xs={12} sm={6} md={3} item>
-                          <FormControl margin="dense" variant="outlined" fullWidth>
-                            <InputLabel htmlFor="status-selection">{i18n.t("settings.Plans.public")}</InputLabel>
-                            <Field
-                                as={Select}
-                                id="status-selection"
-                                label={i18n.t("settings.Plans.public")}
-                                labelId="status-selection-label"
-                                name="isPublic"
-                                margin="dense"
-                            >
-                                <MenuItem value={true}>{i18n.t("common.yes")}</MenuItem>
-                                <MenuItem value={false}>{i18n.t("common.no")}</MenuItem>
-                            </Field>
-                          </FormControl>
+                            <FormControl margin="dense" variant="outlined" fullWidth>
+                                <InputLabel htmlFor="status-selection">{i18n.t("settings.Plans.public")}</InputLabel>
+                                <Field
+                                    as={Select}
+                                    id="status-selection"
+                                    label={i18n.t("settings.Plans.public")}
+                                    labelId="status-selection-label"
+                                    name="isPublic"
+                                    margin="dense"
+                                >
+                                    <MenuItem value={true}>{i18n.t("common.yes")}</MenuItem>
+                                    <MenuItem value={false}>{i18n.t("common.no")}</MenuItem>
+                                </Field>
+                            </FormControl>
                         </Grid>
 
                         <Grid xs={12} sm={6} md={3} item>
-                          <FormControl margin="dense" variant="outlined" fullWidth>
-                            <InputLabel id="currency-select-label">{i18n.t('settings.Plans.currencyCode')}</InputLabel>
-                            <Field
-                              as={Select}
-                              labelId="currency-select-label"
-                              id="currency-select"
-                              name="currency"
-                              label={i18n.t('settings.Plans.currencyCode')}
-                              margin="dense"
-                            >
-                              {cc.codes().map(code => {
-                                const currencyInfo = cc.code(code);
-                                if (currencyInfo && currencyInfo.countries && currencyInfo.countries.length > 0) {
-                                  if (currencyInfo.countries.length > 1) {
-                                    return  (
-                                      <MenuItem key={code} value={code}>
-                                        {`${code} - ${currencyInfo.currency}`}
-                                      </MenuItem>
-                                    );
-                                  } else {
-                                    return (
-                                      <MenuItem key={code} value={code}>
-                                        {code} - {currencyInfo.countries[0]} - {currencyInfo.currency}
-                                      </MenuItem>
-                                    );
-                                  }
-                                } else {
-                                  return (
-                                    <MenuItem key={code} value={code}>
-                                      {code}
-                                    </MenuItem>
-                                  );
-                                }
-                              })}
-                            </Field>
-                          </FormControl>
+                            <FormControl margin="dense" variant="outlined" fullWidth>
+                                <InputLabel id="currency-select-label">{i18n.t('settings.Plans.currencyCode')}</InputLabel>
+                                <Field
+                                    as={Select}
+                                    labelId="currency-select-label"
+                                    id="currency-select"
+                                    name="currency"
+                                    label={i18n.t('settings.Plans.currencyCode')}
+                                    margin="dense"
+                                >
+                                    {cc.codes().map(code => {
+                                        const currencyInfo = cc.code(code);
+                                        if (currencyInfo && currencyInfo.countries && currencyInfo.countries.length > 0) {
+                                            if (currencyInfo.countries.length > 1) {
+                                                return (
+                                                    <MenuItem key={code} value={code}>
+                                                        {`${code} - ${currencyInfo.currency}`}
+                                                    </MenuItem>
+                                                );
+                                            } else {
+                                                return (
+                                                    <MenuItem key={code} value={code}>
+                                                        {code} - {currencyInfo.countries[0]} - {currencyInfo.currency}
+                                                    </MenuItem>
+                                                );
+                                            }
+                                        } else {
+                                            return (
+                                                <MenuItem key={code} value={code}>
+                                                    {code}
+                                                </MenuItem>
+                                            );
+                                        }
+                                    })}
+                                </Field>
+                            </FormControl>
                         </Grid>
-          
+
                         <Grid xs={12} sm={6} md={3} item>
-                          <Field
-                            as={TextField}
-                                  label={i18n.t('common.value')}
-                                  name="value"
-                                  variant="outlined"
-                                  className={classes.fullWidth}
-                                  margin="dense"
-                                  type="text"
-                              />
+                            <Field
+                                as={TextField}
+                                label={i18n.t('common.value')}
+                                name="value"
+                                variant="outlined"
+                                className={classes.fullWidth}
+                                margin="dense"
+                                type="text"
+                            />
                         </Grid>
                         <Grid xs={12} sm={6} md={4} item>
                             <Field
@@ -210,6 +216,72 @@ export function PlanManagerForm(props) {
                                 as={TextField}
                                 label={i18n.t('settings.Plans.queuesLimit')}
                                 name="queues"
+                                variant="outlined"
+                                className={classes.fullWidth}
+                                margin="dense"
+                                type="number"
+                            />
+                        </Grid>
+                        <Grid xs={12} sm={6} md={4} item>
+                            <Field
+                                as={TextField}
+                                label="Multi Atendimento (WhastApp Api)"
+                                name="connectionsWhatsapp"
+                                variant="outlined"
+                                className={classes.fullWidth}
+                                margin="dense"
+                                type="number"
+                            />
+                        </Grid>
+                        <Grid xs={12} sm={6} md={4} item>
+                            <Field
+                                as={TextField}
+                                label="WhatsApp Oficial"
+                                name="connectionsWhatsappCloud"
+                                variant="outlined"
+                                className={classes.fullWidth}
+                                margin="dense"
+                                type="number"
+                            />
+                        </Grid>
+                        <Grid xs={12} sm={6} md={4} item>
+                            <Field
+                                as={TextField}
+                                label="Instagram"
+                                name="connectionsInstagram"
+                                variant="outlined"
+                                className={classes.fullWidth}
+                                margin="dense"
+                                type="number"
+                            />
+                        </Grid>
+                        <Grid xs={12} sm={6} md={4} item>
+                            <Field
+                                as={TextField}
+                                label="Telegram"
+                                name="connectionsTelegram"
+                                variant="outlined"
+                                className={classes.fullWidth}
+                                margin="dense"
+                                type="number"
+                            />
+                        </Grid>
+                        <Grid xs={12} sm={6} md={4} item>
+                            <Field
+                                as={TextField}
+                                label="Email"
+                                name="connectionsEmail"
+                                variant="outlined"
+                                className={classes.fullWidth}
+                                margin="dense"
+                                type="number"
+                            />
+                        </Grid>
+                        <Grid xs={12} sm={6} md={4} item>
+                            <Field
+                                as={TextField}
+                                label="WAVOIP"
+                                name="connectionsWavoip"
                                 variant="outlined"
                                 className={classes.fullWidth}
                                 margin="dense"
@@ -273,7 +345,7 @@ export function PlansManagerGrid(props) {
                             </TableCell>
                             <TableCell align="left">{row.name || '-'}</TableCell>
                             <TableCell align="center">{row.users || '-'}</TableCell>
-                            <TableCell align="center">{row.isPublic ? "Sim": "Não" || '-'}</TableCell>
+                            <TableCell align="center">{row.isPublic ? "Sim" : "Não" || '-'}</TableCell>
                             <TableCell align="center">{row.connections || '-'}</TableCell>
                             <TableCell align="center">{row.queues || '-'}</TableCell>
                             <TableCell align="center">{safeValueFormat(row.value, row.currency)}</TableCell>
@@ -296,6 +368,12 @@ export default function PlansManager() {
         name: '',
         users: 0,
         connections: 0,
+        connectionsWhatsapp: 0,
+        connectionsWhatsappCloud: 0,
+        connectionsInstagram: 0,
+        connectionsTelegram: 0,
+        connectionsEmail: 0,
+        connectionsWavoip: 0,
         queues: 0,
         value: 0,
         currency: "",
@@ -325,6 +403,12 @@ export default function PlansManager() {
         const datanew = {
             id: data.id,
             connections: data.connections,
+            connectionsWhatsapp: data.connectionsWhatsapp,
+            connectionsWhatsappCloud: data.connectionsWhatsappCloud,
+            connectionsInstagram: data.connectionsInstagram,
+            connectionsTelegram: data.connectionsTelegram,
+            connectionsEmail: data.connectionsEmail,
+            connectionsWavoip: data.connectionsWavoip,
             name: data.name,
             queues: data.queues,
             users: data.users,
@@ -371,6 +455,12 @@ export default function PlansManager() {
             name: '',
             users: 0,
             connections: 0,
+            connectionsWhatsapp: 0,
+            connectionsWhatsappCloud: 0,
+            connectionsInstagram: 0,
+            connectionsTelegram: 0,
+            connectionsEmail: 0,
+            connectionsWavoip: 0,
             queues: 0,
             value: 0,
             currency: "",
@@ -384,8 +474,14 @@ export default function PlansManager() {
             name: data.name || '',
             users: data.users || 0,
             connections: data.connections || 0,
+            connectionsWhatsapp: data.connectionsWhatsapp || 0,
+            connectionsWhatsappCloud: data.connectionsWhatsappCloud || 0,
+            connectionsInstagram: data.connectionsInstagram || 0,
+            connectionsTelegram: data.connectionsTelegram || 0,
+            connectionsEmail: data.connectionsEmail || 0,
+            connectionsWavoip: data.connectionsWavoip || 0,
             queues: data.queues || 0,
-            value: data.value.toLocaleString('pt-br', { minimumFractionDigits: 2 }) || 0,
+            value: data.value ? data.value.toLocaleString('pt-br', { minimumFractionDigits: 2 }) : 0,
             currency: data.currency || '',
             isPublic: data.isPublic
         })

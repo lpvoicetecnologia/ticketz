@@ -195,11 +195,16 @@ export async function verifyContact(
       if (recreateLidMap || !foundContact.whatsappLidMap) {
         if (lid) {
           await checkAndDedup(foundContact, lid);
-          await WhatsappLidMap.create({
-            companyId,
-            lid,
-            contactId: foundContact.id
-          });
+          const existingMap = await WhatsappLidMap.findOne({ where: { lid, companyId } });
+          if (existingMap) {
+            await existingMap.update({ contactId: foundContact.id });
+          } else {
+            await WhatsappLidMap.create({
+              companyId,
+              lid,
+              contactId: foundContact.id
+            });
+          }
         }
       }
       return updateContact(foundContact, {
@@ -220,11 +225,16 @@ export async function verifyContact(
         });
 
         if (lidContact) {
-          await WhatsappLidMap.create({
-            companyId,
-            lid,
-            contactId: lidContact.id
-          });
+          const existingMap = await WhatsappLidMap.findOne({ where: { lid, companyId } });
+          if (existingMap) {
+            await existingMap.update({ contactId: lidContact.id });
+          } else {
+            await WhatsappLidMap.create({
+              companyId,
+              lid,
+              contactId: lidContact.id
+            });
+          }
           return updateContact(lidContact, {
             number: contactData.number,
             profilePicUrl: contactData.profilePicUrl

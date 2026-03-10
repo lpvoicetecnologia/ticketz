@@ -31,6 +31,8 @@ import { verifyMessage } from "../services/WbotServices/wbotMessageListener";
 import { getJidOf } from "../services/WbotServices/getJidOf";
 import ShowContactService from "../services/ContactServices/ShowContactService";
 import { verifyContact } from "../services/WbotServices/verifyContact";
+import CreateOrUpdateContactService from "../services/ContactServices/CreateOrUpdateContactService";
+import FindOrCreateTicketService from "../services/TicketServices/FindOrCreateTicketService";
 
 type IndexQuery = {
   pageNumber: string;
@@ -314,55 +316,104 @@ export const send = async (req: Request, res: Response): Promise<Response> => {
     const { body, linkPreview } = messageData;
     const saveOnTicket = !!messageData.saveOnTicket;
 
-    if (!number.includes("@")) {
-      const numberToTest = messageData.number;
+    if (whatsapp.channel === "whatsapp") {
+      if (!number.includes("@")) {
+        const numberToTest = messageData.number;
+        const { companyId } = whatsapp;
+        const CheckValidNumber = await CheckContactNumber(
+          numberToTest,
+          companyId,
+          whatsapp
+        );
+        number = CheckValidNumber.jid.replace(/\D/g, "");
+      }
 
-      const { companyId } = whatsapp;
-
-      const CheckValidNumber = await CheckContactNumber(
-        numberToTest,
-        companyId,
-        whatsapp
-      );
-      number = CheckValidNumber.jid.replace(/\D/g, "");
+      if (medias) {
+        await Promise.all(
+          medias.map(async (media: Express.Multer.File) => {
+            await req.app.get("queues").messageQueue.add(
+              "SendMessage",
+              {
+                whatsappId,
+                data: {
+                  number,
+                  body: media.originalname,
+                  mediaPath: media.path,
+                  saveOnTicket
+                }
+              },
+              { removeOnComplete: true, attempts: 3 }
+            );
+          })
+        );
+      } else {
+        req.app.get("queues").messageQueue.add(
+          "SendMessage",
+          {
+            whatsappId,
+            data: {
+              number,
+              body,
+              linkPreview,
+              saveOnTicket
+            }
+          },
+          { removeOnComplete: false, attempts: 3 }
+        );
+      }
+      return res.send({ mensagem: "Message added to queue" });
     }
 
-    if (medias) {
-      await Promise.all(
-        medias.map(async (media: Express.Multer.File) => {
-          await req.app.get("queues").messageQueue.add(
-            "SendMessage",
-            {
-              whatsappId,
-              data: {
-                number,
-                body: media.originalname,
-                mediaPath: media.path,
-                saveOnTicket
-              }
-            },
-            { removeOnComplete: true, attempts: 3 }
-          );
-        })
-      );
-    } else {
-      req.app.get("queues").messageQueue.add(
-        "SendMessage",
-        {
-          whatsappId,
-          data: {
-            number,
-            body,
-            linkPreview,
-            saveOnTicket
-          }
-        },
+    // Canais não-Baileys
+    const { companyId } = whatsapp;
+    const contact = await CreateOrUpdateContactService({
+      name: number,
+      number,
+      companyId,
+      channel: whatsapp.channel
+    });
 
-        { removeOnComplete: false, attempts: 3 }
-      );
+    const { ticket } = await FindOrCreateTicketService(
+      contact,
+      whatsapp.id,
+      companyId,
+      {
+        incrementUnread: false,
+        doNotReopen: true
+      }
+    );
+
+    const hasMedias = medias && medias.length > 0;
+    const userId = req.user ? Number(req.user.id) : undefined;
+
+    if (hasMedias) {
+      if (whatsapp.channel === "telegram") {
+        for (const media of medias) {
+          await SendTelegramMessage({ body: body || "", ticket, userId, media });
+        }
+      } else if (whatsapp.channel === "whatsapp_cloud") {
+        for (const media of medias) {
+          await SendWaCloudMessage({ body: body || "", ticket, userId, media });
+        }
+      } else {
+        medias.forEach((media: any) => {
+          try { fs.unlinkSync(media.path); } catch (_) {}
+        });
+        throw new AppError(`Envio de mídia não suportado/implementado para o canal ${whatsapp.channel} na API`, 400);
+      }
+    } else if (body) {
+      if (whatsapp.channel === "whatsapp_cloud") {
+        await SendWaCloudMessage({ body, ticket, userId });
+      } else if (whatsapp.channel === "instagram") {
+        await SendInstagramMessage({ body, ticket, userId });
+      } else if (whatsapp.channel === "telegram") {
+        await SendTelegramMessage({ body, ticket, userId });
+      } else if (whatsapp.channel === "email") {
+        await SendEmailMessage({ body, ticket, userId });
+      }
     }
 
-    return res.send({ mensagem: "Message added to queue" });
+    return res.send({ mensagem: "Message sent" });
   } catch (err) {
     const error = { errType: typeof err, serialized: JSON.stringify(err), err };
     if (err?.message) {
