@@ -61,7 +61,11 @@ const InstagramModal = ({ open, onClose, whatsAppId }) => {
     const [selectedQueueIds, setSelectedQueueIds] = useState([]);
 
     useEffect(() => {
-        if (!whatsAppId) return;
+        if (!whatsAppId) {
+            setWhatsApp(initialState);
+            setSelectedQueueIds([]);
+            return;
+        }
         (async () => {
             try {
                 const { data } = await api.get(`whatsapp/${whatsAppId}?session=0`);
@@ -144,21 +148,22 @@ const InstagramModal = ({ open, onClose, whatsAppId }) => {
                             />
                             <Field
                                 as={TextField}
-                                label="Token de Acesso"
+                                label="Token de Acesso (Token Permanente ou Long-Lived Meta)"
                                 name="facebookUserToken"
                                 fullWidth
                                 variant="outlined"
                                 margin="dense"
                                 error={touched.facebookUserToken && Boolean(errors.facebookUserToken)}
-                                helperText={touched.facebookUserToken && errors.facebookUserToken}
+                                helperText={touched.facebookUserToken ? errors.facebookUserToken : "Cole aqui o Token de Usuário de Sistema gerado no painel da Meta"}
                             />
                             <Field
                                 as={TextField}
-                                label="App Secret"
+                                label="Verify Token (Token de Verificação do Webhook)"
                                 name="tokenMeta"
                                 fullWidth
                                 variant="outlined"
                                 margin="dense"
+                                helperText="Crie uma senha e digite no Meta For Developers ao configurar o Webhook para essa conexão"
                             />
                             <Field
                                 as={TextField}

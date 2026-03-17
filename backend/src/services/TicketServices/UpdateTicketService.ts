@@ -19,6 +19,11 @@ import Queue from "../../models/Queue";
 import { _t } from "../TranslationServices/i18nService";
 import SendTelegramMessage from "../TelegramServices/SendTelegramMessage";
 import SendWaCloudMessage from "../WaCloudServices/SendWaCloudMessage";
+import SendFacebookMessage from "../FacebookServices/SendFacebookMessage";
+import Tag from "../../models/Tag";
+import TicketTag from "../../models/TicketTag";
+import { Op } from "sequelize";
+import ExecuteFunnelCommandsService from "../FunnelServices/ExecuteFunnelCommandsService";
 
 export interface UpdateTicketData {
   status?: string;
@@ -27,6 +32,8 @@ export interface UpdateTicketData {
   chatbot?: boolean;
   queueOptionId?: number;
   justClose?: boolean;
+  funnelId?: number | null;
+  stageId?: number | null;
 }
 
 interface Request {
@@ -60,6 +67,8 @@ const sendFormattedMessage = async (
     await SendTelegramMessage({ body: messageText, ticket });
   } else if (ticket.channel === "whatsapp_cloud") {
     await SendWaCloudMessage({ body: messageText, ticket });
+  } else if (ticket.channel === "facebook") {
+    await SendFacebookMessage({ body: messageText, ticket });
   }
   // instagram e email: sem mensagem automática de sistema por ora
 };
@@ -112,6 +121,8 @@ const UpdateTicketService = async ({
     const fromChatbot = ticketData.chatbot || false;
     let chatbot: boolean | null = fromChatbot;
     let queueOptionId: number | null = ticketData.queueOptionId || null;
+    let funnelId: number | null = ticketData.funnelId || undefined;
+    let stageId: number | null = ticketData.stageId || undefined;
 
     const io = getIO();
 
@@ -125,12 +136,43 @@ const UpdateTicketService = async ({
     const isGroup = ticket.contact?.isGroup || ticket.isGroup;
 
     if (queueId && queueId !== ticket.queueId) {
-      const newQueue = await Queue.findByPk(queueId);
+      const newQueue = await Queue.findByPk(queueId, {
+        include: [{ model: Tag, as: "defaultTag" }]
+      });
       if (!newQueue) {
         throw new AppError("Queue not found", 404);
       }
       if (newQueue.companyId !== ticket.companyId) {
         throw new AppError("Queue does not belong to the same company", 403);
+      }
+
+      const defaultTag = newQueue.defaultTag;
+      if (defaultTag && defaultTag.funnelId) {
+        const targetFunnelId = defaultTag.funnelId;
+        const targetOrder = defaultTag.kanban || 0;
+
+        const funnelTags = await Tag.findAll({
+          where: { funnelId: targetFunnelId }
+        });
+        const funnelTagIds = funnelTags.map(t => t.id);
+
+        const currentTags = await TicketTag.findAll({
+          where: { ticketId, tagId: { [Op.in]: funnelTagIds } }
+        });
+
+        let canAdvance = true;
+        for (const tTag of currentTags) {
+          const matchedTag = funnelTags.find(t => t.id === tTag.tagId);
+          if (matchedTag && (matchedTag.kanban || 0) >= targetOrder) {
+            canAdvance = false;
+            break;
+          }
+        }
+
+        if (canAdvance) {
+          funnelId = targetFunnelId;
+          stageId = defaultTag.id;
+        }
       }
     }
 
@@ -294,6 +336,33 @@ const UpdateTicketService = async ({
       chatbot,
       queueOptionId
     });
+
+    if (funnelId !== undefined && stageId !== undefined) {
+      if (funnelId !== null) {
+        const funnelTags = await Tag.findAll({ where: { funnelId }, attributes: ["id"] });
+        const funnelTagIds = funnelTags.map(t => t.id);
+
+        if (funnelTagIds.length > 0) {
+          await TicketTag.destroy({
+            where: { ticketId, tagId: { [Op.in]: funnelTagIds } }
+          });
+        }
+      }
+      
+      if (stageId !== null) {
+        await TicketTag.findOrCreate({ where: { ticketId, tagId: stageId }});
+
+        // Reload ticket with contact to have full data for automation
+        const updatedTicket = await ShowTicketService(ticketId, companyId);
+        const stageTag = await Tag.findByPk(stageId);
+        if (stageTag) {
+          // Run automations asynchronously so they don't block the API response
+          ExecuteFunnelCommandsService(updatedTicket, stageTag).catch(err =>
+            logger.error({ err }, "ExecuteFunnelCommandsService failed")
+          );
+        }
+      }
+    }
 
     if (oldStatus !== status) {
       if (oldStatus === "closed" && status === "open") {

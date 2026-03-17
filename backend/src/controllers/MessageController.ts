@@ -19,6 +19,7 @@ import SendWaCloudMessage from "../services/WaCloudServices/SendWaCloudMessage";
 import SendInstagramMessage from "../services/InstagramServices/SendInstagramMessage";
 import SendTelegramMessage from "../services/TelegramServices/SendTelegramMessage";
 import SendEmailMessage from "../services/EmailServices/SendEmailMessage";
+import SendFacebookMessage from "../services/FacebookServices/SendFacebookMessage";
 
 import { logger } from "../utils/logger";
 import { MessageData } from "../helpers/SendMessage";
@@ -136,6 +137,8 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
       await SendWaCloudMessage({ body, ticket, userId, quotedMsg });
     } else if (channel === "instagram") {
       await SendInstagramMessage({ body, ticket, userId });
+    } else if (channel === "facebook") {
+      await SendFacebookMessage({ body, ticket, userId });
     } else if (channel === "telegram") {
       await SendTelegramMessage({ body, ticket, userId, quotedMsg });
     } else if (channel === "email") {
@@ -406,6 +409,8 @@ export const send = async (req: Request, res: Response): Promise<Response> => {
         await SendWaCloudMessage({ body, ticket, userId });
       } else if (whatsapp.channel === "instagram") {
         await SendInstagramMessage({ body, ticket, userId });
+      } else if (whatsapp.channel === "facebook") {
+        await SendFacebookMessage({ body, ticket, userId });
       } else if (whatsapp.channel === "telegram") {
         await SendTelegramMessage({ body, ticket, userId });
       } else if (whatsapp.channel === "email") {

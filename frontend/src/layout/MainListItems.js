@@ -276,6 +276,16 @@ const MainListItems = (props) => {
               primary={i18n.t("mainDrawer.listItems.tickets")}
               icon={<WhatsAppIcon />}
             />
+            <ListItemLink
+              to="/kanban"
+              primary="Kanban"
+              icon={<DashboardOutlinedIcon />}
+            />
+            <ListItemLink
+              to="/funnels"
+              primary="Funis"
+              icon={<AccountTreeOutlinedIcon />}
+            />
       <ListItemLink
         to="/todolist"
         primary={i18n.t("mainDrawer.listItems.tasks")}

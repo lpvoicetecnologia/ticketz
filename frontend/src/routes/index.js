@@ -32,6 +32,8 @@ import Annoucements from "../pages/Annoucements";
 import Chat from "../pages/Chat";
 import ToDoList from "../pages/ToDoList/";
 import Subscription from "../pages/Subscription/";
+import Kanban from "../pages/Kanban";
+import Funnels from "../pages/Funnels";
 
 const Routes = () => {
   const [showCampaigns, setShowCampaigns] = useState(false);
@@ -58,6 +60,18 @@ const Routes = () => {
                   exact
                   path="/tickets/:ticketId?"
                   component={TicketResponsiveContainer}
+                  isPrivate
+                />
+                <Route
+                  exact
+                  path="/kanban"
+                  component={Kanban}
+                  isPrivate
+                />
+                <Route
+                  exact
+                  path="/funnels"
+                  component={Funnels}
                   isPrivate
                 />
                 <Route

@@ -80,6 +80,7 @@ export function PlanManagerForm(props) {
         connectionsWhatsapp: 0,
         connectionsWhatsappCloud: 0,
         connectionsInstagram: 0,
+        connectionsFacebook: 0,
         connectionsTelegram: 0,
         connectionsEmail: 0,
         connectionsWavoip: 0,
@@ -258,6 +259,17 @@ export function PlanManagerForm(props) {
                         <Grid xs={12} sm={6} md={4} item>
                             <Field
                                 as={TextField}
+                                label="Facebook Messenger"
+                                name="connectionsFacebook"
+                                variant="outlined"
+                                className={classes.fullWidth}
+                                margin="dense"
+                                type="number"
+                            />
+                        </Grid>
+                        <Grid xs={12} sm={6} md={4} item>
+                            <Field
+                                as={TextField}
                                 label="Telegram"
                                 name="connectionsTelegram"
                                 variant="outlined"
@@ -371,6 +383,7 @@ export default function PlansManager() {
         connectionsWhatsapp: 0,
         connectionsWhatsappCloud: 0,
         connectionsInstagram: 0,
+        connectionsFacebook: 0,
         connectionsTelegram: 0,
         connectionsEmail: 0,
         connectionsWavoip: 0,
@@ -406,6 +419,7 @@ export default function PlansManager() {
             connectionsWhatsapp: data.connectionsWhatsapp,
             connectionsWhatsappCloud: data.connectionsWhatsappCloud,
             connectionsInstagram: data.connectionsInstagram,
+            connectionsFacebook: data.connectionsFacebook,
             connectionsTelegram: data.connectionsTelegram,
             connectionsEmail: data.connectionsEmail,
             connectionsWavoip: data.connectionsWavoip,
@@ -458,6 +472,7 @@ export default function PlansManager() {
             connectionsWhatsapp: 0,
             connectionsWhatsappCloud: 0,
             connectionsInstagram: 0,
+            connectionsFacebook: 0,
             connectionsTelegram: 0,
             connectionsEmail: 0,
             connectionsWavoip: 0,
@@ -477,6 +492,7 @@ export default function PlansManager() {
             connectionsWhatsapp: data.connectionsWhatsapp || 0,
             connectionsWhatsappCloud: data.connectionsWhatsappCloud || 0,
             connectionsInstagram: data.connectionsInstagram || 0,
+            connectionsFacebook: data.connectionsFacebook || 0,
             connectionsTelegram: data.connectionsTelegram || 0,
             connectionsEmail: data.connectionsEmail || 0,
             connectionsWavoip: data.connectionsWavoip || 0,

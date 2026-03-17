@@ -3,6 +3,7 @@ import { Sequelize } from "sequelize-typescript";
 import Tag from "../../models/Tag";
 import TicketTag from "../../models/TicketTag";
 import ContactTag from "../../models/ContactTag";
+import Funnel from "../../models/Funnel";
 import sequelize from "../../database";
 
 interface Request {
@@ -39,8 +40,14 @@ const ListService = async ({
 
   const tags = await Tag.findAll({
     where,
-    order: [Sequelize.literal('immutable_unaccent(LOWER("name")) ASC')],
+    order: [Sequelize.literal('immutable_unaccent(LOWER("Tag"."name")) ASC')],
     include: [
+      {
+        model: Funnel,
+        as: "funnel",
+        attributes: ["id", "name", "type", "color"],
+        required: false
+      },
       {
         model: TicketTag,
         as: "ticketTags",

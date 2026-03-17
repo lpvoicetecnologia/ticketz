@@ -10,6 +10,7 @@ import sequelize from "../../database";
 import Whatsapp from "../../models/Whatsapp";
 import Queue from "../../models/Queue";
 import { incrementCounter } from "../CounterServices/IncrementCounter";
+import { logger } from "../../utils/logger";
 
 const createTicketMutex = new Mutex();
 
@@ -57,6 +58,17 @@ const internalFindOrCreateTicketService = async (
     if (ticket && incrementUnread) {
       await ticket.increment("unreadMessages");
       ticket = await ticket.reload();
+      logger.info(
+        {
+          ticketId: ticket.id,
+          contactId: ticket.contactId,
+          whatsappId,
+          companyId,
+          channel: sessionChannel,
+          unreadMessages: ticket.unreadMessages
+        },
+        "FindOrCreateTicketService: existing ticket unread incremented"
+      );
     }
 
     if (!ticket && groupContact) {
@@ -77,6 +89,17 @@ const internalFindOrCreateTicketService = async (
             : ticket.unreadMessages,
           companyId
         });
+        logger.info(
+          {
+            ticketId: ticket.id,
+            contactId: ticket.contactId,
+            whatsappId,
+            companyId,
+            channel: sessionChannel,
+            reason: "groupContact"
+          },
+          "FindOrCreateTicketService: ticket reopened"
+        );
         await FindOrCreateATicketTrakingService({
           ticketId: ticket.id,
           companyId,
@@ -117,6 +140,17 @@ const internalFindOrCreateTicketService = async (
           companyId,
           channel: sessionChannel
         });
+        logger.info(
+          {
+            ticketId: ticket.id,
+            contactId: ticket.contactId,
+            whatsappId,
+            companyId,
+            channel: sessionChannel,
+            reason: "autoReopenTimeout"
+          },
+          "FindOrCreateTicketService: ticket reopened"
+        );
         await FindOrCreateATicketTrakingService({
           ticketId: ticket.id,
           companyId,
@@ -156,6 +190,18 @@ const internalFindOrCreateTicketService = async (
 
       justCreated = true;
 
+      logger.info(
+        {
+          ticketId: ticket.id,
+          contactId: ticket.contactId,
+          whatsappId,
+          companyId,
+          channel: sessionChannel,
+          queueId
+        },
+        "FindOrCreateTicketService: ticket created"
+      );
+
       await FindOrCreateATicketTrakingService({
         ticketId: ticket.id,
         companyId,
@@ -165,6 +211,20 @@ const internalFindOrCreateTicketService = async (
     }
 
     ticket = await ShowTicketService(ticket.id, companyId);
+
+    logger.info(
+      {
+        ticketId: ticket.id,
+        contactId: ticket.contactId,
+        whatsappId,
+        companyId,
+        channel: sessionChannel,
+        status: ticket.status,
+        queueId: ticket.queueId,
+        justCreated
+      },
+      "FindOrCreateTicketService: resolved ticket"
+    );
 
     return { ticket, justCreated };
   });

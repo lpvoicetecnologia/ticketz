@@ -86,7 +86,11 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
 
   useEffect(() => {
     const fetchSession = async () => {
-      if (!whatsAppId) return;
+      if (!whatsAppId) {
+        setWhatsApp(initialState);
+        setSelectedQueueIds([]);
+        return;
+      }
 
       try {
         const { data } = await api.get(`whatsapp/${whatsAppId}?session=0`);

@@ -9,6 +9,7 @@ interface PlanData {
   connectionsWhatsapp?: number;
   connectionsWhatsappCloud?: number;
   connectionsInstagram?: number;
+  connectionsFacebook?: number;
   connectionsTelegram?: number;
   connectionsEmail?: number;
   connectionsWavoip?: number;

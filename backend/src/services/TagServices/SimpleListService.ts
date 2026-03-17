@@ -1,7 +1,6 @@
 import { Op, Sequelize } from "sequelize";
 import Tag from "../../models/Tag";
-import Ticket from "../../models/Ticket";
-import TicketTag from "../../models/TicketTag";
+import Funnel from "../../models/Funnel";
 
 interface Request {
   companyId: number;
@@ -26,6 +25,14 @@ const ListService = async ({
 
   const tags = await Tag.findAll({
     where: { ...whereCondition, companyId },
+    include: [
+      {
+        model: Funnel,
+        as: "funnel",
+        attributes: ["id", "name", "type", "color"],
+        required: false
+      }
+    ],
     order: [["name", "ASC"]]
   });
 

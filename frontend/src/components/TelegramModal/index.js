@@ -58,7 +58,11 @@ const TelegramModal = ({ open, onClose, whatsAppId }) => {
     const [selectedQueueIds, setSelectedQueueIds] = useState([]);
 
     useEffect(() => {
-        if (!whatsAppId) return;
+        if (!whatsAppId) {
+            setWhatsApp(initialState);
+            setSelectedQueueIds([]);
+            return;
+        }
         (async () => {
             try {
                 const { data } = await api.get(`whatsapp/${whatsAppId}?session=0`);

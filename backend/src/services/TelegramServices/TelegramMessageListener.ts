@@ -57,6 +57,18 @@ export async function processTelegramUpdate(
 
     if (!bodyText && !mediaUrl) return;
 
+    logger.info(
+      {
+        whatsappId: whatsapp.id,
+        companyId: whatsapp.companyId,
+        channel: "telegram",
+        chatId,
+        messageId,
+        hasMedia: Boolean(mediaUrl)
+      },
+      "Telegram: inbound message received"
+    );
+
     // Find or create contact — channel is determined by session, not contact
     let contact = await Contact.findOne({
       where: { number: chatId, companyId: whatsapp.companyId }
@@ -82,7 +94,18 @@ export async function processTelegramUpdate(
 
     const msgDbId = `tg-${messageId}-${whatsapp.id}`;
     const existing = await Message.findOne({ where: { id: msgDbId } });
-    if (existing) return;
+    if (existing) {
+      logger.info(
+        {
+          whatsappId: whatsapp.id,
+          companyId: whatsapp.companyId,
+          channel: "telegram",
+          msgDbId
+        },
+        "Telegram: duplicate message ignored"
+      );
+      return;
+    }
 
     const messageData = {
       id: msgDbId,
@@ -101,6 +124,18 @@ export async function processTelegramUpdate(
       messageData,
       companyId: whatsapp.companyId
     });
+
+    logger.info(
+      {
+        whatsappId: whatsapp.id,
+        companyId: whatsapp.companyId,
+        channel: "telegram",
+        msgDbId,
+        ticketId: ticket.id,
+        contactId: contact.id
+      },
+      "Telegram: message persisted and emitted"
+    );
 
     await ticket.update({ lastMessage: bodyText });
 

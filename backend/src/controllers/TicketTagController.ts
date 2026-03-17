@@ -13,7 +13,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     return res.status(400).json({ error: "Invalid ticketId or tagId." });
   }
 
-  const ticketTag = await ticketTagAdd(ticketId, tagId, req.companyId);
+  const ticketTag = await ticketTagAdd(ticketId, tagId, req.user.companyId);
   return res.status(201).json(ticketTag);
 };
 
@@ -23,7 +23,7 @@ export const removeAll = async (
 ): Promise<Response> => {
   const ticketId = Number(req.params.ticketId);
 
-  await ticketTagRemoveAll(ticketId, req.companyId);
+  await ticketTagRemoveAll(ticketId, req.user.companyId);
   return res.status(200).json({ message: "Ticket tags removed successfully." });
 };
 
@@ -38,7 +38,7 @@ export const remove = async (
     return res.status(400).json({ error: "Invalid ticketId or tagId." });
   }
 
-  await ticketTagRemove(ticketId, tagId, req.companyId);
+  await ticketTagRemove(ticketId, tagId, req.user.companyId);
 
   return res.status(200).json({ message: "Ticket tag removed successfully." });
 };

@@ -2066,6 +2066,19 @@ const wbotMessageListener = async (
           return;
         }
 
+        logger.info(
+          {
+            companyId,
+            channel: "whatsapp",
+            whatsappId: wbot.id,
+            keyId: message?.key?.id,
+            remoteJid: message?.key?.remoteJid,
+            fromMe: Boolean(message?.key?.fromMe),
+            upsertType: messageUpsert.type
+          },
+          "wbotMessageListener: inbound event received"
+        );
+
         await wbot.sendReceipts([message.key], undefined);
 
         if (await verifyRecentCampaign(message, companyId)) {

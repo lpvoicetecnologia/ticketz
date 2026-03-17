@@ -13,6 +13,7 @@ import {
   DataType
 } from "sequelize-typescript";
 import Company from "./Company";
+import Funnel from "./Funnel";
 import Ticket from "./Ticket";
 import TicketTag from "./TicketTag";
 import Contact from "./Contact";
@@ -33,6 +34,9 @@ class Tag extends Model {
 
   @Column
   kanban: number;
+
+  @Column
+  commands: string; // JSON array of automation commands
 
   @HasMany(() => TicketTag)
   ticketTags: TicketTag[];
@@ -68,6 +72,13 @@ class Tag extends Model {
 
   @BelongsTo(() => Company)
   company: Company;
+
+  @ForeignKey(() => Funnel)
+  @Column
+  funnelId: number;
+
+  @BelongsTo(() => Funnel)
+  funnel: Funnel;
 
   @CreatedAt
   createdAt: Date;

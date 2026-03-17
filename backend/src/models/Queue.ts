@@ -24,6 +24,7 @@ import WhatsappQueue from "./WhatsappQueue";
 import QueueOption from "./QueueOption";
 import Ticket from "./Ticket";
 import { OpenHoursData } from "../helpers/checkOpenHours";
+import Tag from "./Tag";
 
 @Table
 class Queue extends Model {
@@ -86,6 +87,13 @@ class Queue extends Model {
 
   @Column
   mediaName: string;
+
+  @ForeignKey(() => Tag)
+  @Column
+  defaultTagId: number;
+
+  @BelongsTo(() => Tag)
+  defaultTag: Tag;
 
   @HasMany(() => Ticket)
   tickets: Ticket[];

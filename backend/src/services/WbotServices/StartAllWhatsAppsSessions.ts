@@ -11,7 +11,7 @@ export const StartAllWhatsAppsSessions = async (
       whatsapps.forEach(whatsapp => {
         if (whatsapp.channel === "whatsapp") {
           StartWhatsAppSession(whatsapp, companyId);
-        } else if (["telegram", "whatsapp_cloud", "instagram", "email"].includes(whatsapp.channel)) {
+        } else if (["telegram", "whatsapp_cloud", "instagram", "facebook", "email"].includes(whatsapp.channel)) {
           const { validateAndConnectStatelessChannel } = require("../../helpers/ValidateStatelessChannel");
           validateAndConnectStatelessChannel(whatsapp);
         }

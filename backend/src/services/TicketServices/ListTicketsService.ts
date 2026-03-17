@@ -21,6 +21,7 @@ import TicketTag from "../../models/TicketTag";
 import Whatsapp from "../../models/Whatsapp";
 import { GetCompanySetting } from "../../helpers/CheckSettings";
 import ContactTag from "../../models/ContactTag";
+import Funnel from "../../models/Funnel";
 
 interface Request {
   isSearch?: boolean;
@@ -40,6 +41,8 @@ interface Request {
   tags: number[];
   users: number[];
   companyId: number;
+  funnelId?: number;
+  stageId?: number;
 }
 
 interface Response {
@@ -65,7 +68,9 @@ const ListTicketsService = async ({
   withUnreadMessages,
   notClosed,
   all,
-  companyId
+  companyId,
+  funnelId,
+  stageId
 }: Request): Promise<Response> => {
   let ticketId: number;
 
@@ -316,6 +321,44 @@ const ListTicketsService = async ({
     ...whereCondition,
     companyId
   };
+
+  if (funnelId) {
+    const funnelTags = await Tag.findAll({ where: { funnelId }, attributes: ["id"] });
+    const funnelTagIds = funnelTags.map(t => t.id);
+
+    if (funnelTagIds.length > 0) {
+      const ticketTags = await TicketTag.findAll({
+        where: { tagId: { [Op.in]: funnelTagIds } }
+      });
+      const ticketsIntersection = ticketTags.map(t => t.ticketId);
+
+      whereCondition = {
+        ...whereCondition,
+        id: {
+          [Op.in]: ticketsIntersection
+        }
+      };
+    } else {
+       whereCondition = {
+        ...whereCondition,
+        id: 0 
+      };
+    }
+  }
+
+  if (stageId) {
+    const ticketTags = await TicketTag.findAll({
+      where: { tagId: stageId }
+    });
+    const ticketsIntersection = ticketTags.map(t => t.ticketId);
+    
+    whereCondition = {
+      ...whereCondition,
+      id: {
+        [Op.in]: ticketsIntersection
+      }
+    };
+  }
 
   const { count, rows: tickets } = await Ticket.findAndCountAll({
     where: whereCondition,

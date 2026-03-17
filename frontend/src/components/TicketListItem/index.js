@@ -16,6 +16,7 @@ import Badge from "@material-ui/core/Badge";
 
 import TelegramIcon from "@material-ui/icons/Telegram";
 import InstagramIcon from "@material-ui/icons/Instagram";
+import FacebookIcon from "@material-ui/icons/Facebook";
 import CloudIcon from "@material-ui/icons/Cloud";
 import EmailIcon from "@material-ui/icons/Email";
 
@@ -180,6 +181,7 @@ const TicketListItem = ({ ticket, groupActionButtons }) => {
               >
                 {ticket.channel === "telegram" && <TelegramIcon fontSize="small" style={{ color: "#0088cc", fontSize: 16, marginRight: 4, verticalAlign: "middle" }} />}
                 {ticket.channel === "instagram" && <InstagramIcon fontSize="small" style={{ color: "#E1306C", fontSize: 16, marginRight: 4, verticalAlign: "middle" }} />}
+                {ticket.channel === "facebook" && <FacebookIcon fontSize="small" style={{ color: "#1877F2", fontSize: 16, marginRight: 4, verticalAlign: "middle" }} />}
                 {ticket.channel === "whatsapp_cloud" && <CloudIcon fontSize="small" style={{ color: "#25D366", fontSize: 16, marginRight: 4, verticalAlign: "middle" }} />}
                 {ticket.channel === "email" && <EmailIcon fontSize="small" style={{ color: "#D44638", fontSize: 16, marginRight: 4, verticalAlign: "middle" }} />}
                 {ticket.contact.name}

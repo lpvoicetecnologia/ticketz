@@ -47,6 +47,7 @@ import api from "../../services/api";
 import WhatsAppModal from "../../components/WhatsAppModal";
 import WaCloudModal from "../../components/WaCloudModal";
 import InstagramModal from "../../components/InstagramModal";
+import FacebookModal from "../../components/FacebookModal";
 import TelegramModal from "../../components/TelegramModal";
 import EmailModal from "../../components/EmailModal";
 import ConnectionTypeModal from "../../components/ConnectionTypeModal";
@@ -64,6 +65,7 @@ const CHANNEL_LABELS = {
 	whatsapp: { label: "WhatsApp", color: "#25D366" },
 	whatsapp_cloud: { label: "WA Cloud", color: "#0866FF" },
 	instagram: { label: "Instagram", color: "#E1306C" },
+	facebook: { label: "Facebook Messenger", color: "#1877F2" },
 	telegram: { label: "Telegram", color: "#2CA5E0" },
 	email: { label: "E-mail", color: "#EA4335" },
 };
@@ -153,6 +155,7 @@ const Connections = () => {
 	const [connectionTypeModalOpen, setConnectionTypeModalOpen] = useState(false);
 	const [waCloudModalOpen, setWaCloudModalOpen] = useState(false);
 	const [instagramModalOpen, setInstagramModalOpen] = useState(false);
+	const [facebookModalOpen, setFacebookModalOpen] = useState(false);
 	const [telegramModalOpen, setTelegramModalOpen] = useState(false);
 	const [emailModalOpen, setEmailModalOpen] = useState(false);
 
@@ -168,6 +171,7 @@ const Connections = () => {
 		if (ch === "whatsapp") setWhatsAppModalOpen(true);
 		else if (ch === "whatsapp_cloud") setWaCloudModalOpen(true);
 		else if (ch === "instagram") setInstagramModalOpen(true);
+		else if (ch === "facebook") setFacebookModalOpen(true);
 		else if (ch === "telegram") setTelegramModalOpen(true);
 		else if (ch === "email") setEmailModalOpen(true);
 		else setWhatsAppModalOpen(true);
@@ -179,6 +183,7 @@ const Connections = () => {
 		setWhatsAppModalOpen(false);
 		setWaCloudModalOpen(false);
 		setInstagramModalOpen(false);
+		setFacebookModalOpen(false);
 		setTelegramModalOpen(false);
 		setEmailModalOpen(false);
 		setQrModalOpen(false);
@@ -431,6 +436,11 @@ const Connections = () => {
 				onClose={closeAll}
 				whatsAppId={selectedWhatsApp?.id}
 			/>
+			<FacebookModal
+				open={facebookModalOpen}
+				onClose={closeAll}
+				whatsAppId={selectedWhatsApp?.id}
+			/>
 			<TelegramModal
 				open={telegramModalOpen}
 				onClose={closeAll}
@@ -476,7 +486,7 @@ const Connections = () => {
 								{whatsApps?.length > 0 &&
 									whatsApps.map(whatsApp => (
 										<TableRow key={whatsApp.id}>
-											<TableCell align="center">{whatsApp.name}</TableCell>
+											<TableCell align="center">{whatsApp.name} (ID: {whatsApp.id})</TableCell>
 											<TableCell align="center">
 												<ChannelBadge channel={whatsApp.channel || "whatsapp"} />
 											</TableCell>

@@ -27,6 +27,10 @@ import {
   Paper,
   Tab,
   Tabs,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl
 } from "@material-ui/core";
 import { AttachFile, Colorize, DeleteOutline } from "@material-ui/icons";
 import { QueueOptions } from "../QueueOptions";
@@ -93,7 +97,7 @@ const QueueModal = ({ open, onClose, queueId }) => {
     color: "",
     greetingMessage: "",
     outOfHoursMessage: "",
-
+    defaultTagId: "",
   };
 
   const [colorPickerModalOpen, setColorPickerModalOpen] = useState(false);
@@ -107,6 +111,19 @@ const QueueModal = ({ open, onClose, queueId }) => {
   const [confirmationOpen, setConfirmationOpen] = useState(false);
 
   const [schedules, setSchedules] = useState({});
+  const [tags, setTags] = useState([]);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const { data } = await api.get("/tags/list");
+        setTags(data);
+      } catch (err) {
+        toastError(err);
+      }
+    };
+    fetchTags();
+  }, []);
 
   useEffect(() => {
     api.get(`/settings`).then(({ data }) => {
@@ -307,6 +324,26 @@ const QueueModal = ({ open, onClose, queueId }) => {
                         });
                       }}
                     />
+                    <div style={{ marginTop: 5 }}>
+                        <FormControl variant="outlined" margin="dense" fullWidth>
+                          <InputLabel>Tag Padrão (Ao Entrar na Fila, ex. Etapa de Funil)</InputLabel>
+                          <Field
+                            as={Select}
+                            label="Tag Padrão (Ao Entrar na Fila, ex. Etapa de Funil)"
+                            name="defaultTagId"
+                            id="defaultTagId"
+                          >
+                            <MenuItem value="">
+                              <em>Nenhuma Tag</em>
+                            </MenuItem>
+                            {tags.map((tag) => (
+                              <MenuItem key={tag.id} value={tag.id}>
+                                {tag.name}
+                              </MenuItem>
+                            ))}
+                          </Field>
+                        </FormControl>
+                    </div>
                     <div style={{ marginTop: 5 }}>
                           <Field
                             as={TextField}

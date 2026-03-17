@@ -22,6 +22,7 @@ import TicketTraking from "./TicketTraking";
 import User from "./User";
 import UserRating from "./UserRating";
 import Whatsapp from "./Whatsapp";
+import Funnel from "./Funnel";
 import { OpenHoursData } from "../helpers/checkOpenHours";
 
 @Table
@@ -138,6 +139,13 @@ class Company extends Model<Company> {
     hooks: true
   })
   ticketTrankins: TicketTraking[];
+
+  @HasMany(() => Funnel, {
+    onUpdate: "CASCADE",
+    onDelete: "CASCADE",
+    hooks: true
+  })
+  funnels: Funnel[];
 }
 
 export default Company;

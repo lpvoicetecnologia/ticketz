@@ -1,6 +1,10 @@
 import { Op, fn, col, WhereOptions, literal, QueryTypes } from "sequelize";
 import Ticket from "../../models/Ticket";
 import Queue from "../../models/Queue";
+import Funnel from "../../models/Funnel";
+import Tag from "../../models/Tag";
+import TicketTag from "../../models/TicketTag";
+import ContactTag from "../../models/ContactTag";
 import { GetCompanySetting } from "../../helpers/CheckSettings";
 import User from "../../models/User";
 import TicketTraking from "../../models/TicketTraking";
@@ -283,9 +287,81 @@ export async function userReport(companyId: number, start: Date, end: Date) {
 }
 
 export async function statusSummaryService(companyId: number) {
+  const funnels = await Funnel.findAll({
+    where: { companyId },
+    include: [
+      {
+        model: Tag,
+        as: "stages",
+        attributes: ["id", "name", "color", "kanban"],
+        required: false
+      }
+    ],
+    order: [["name", "ASC"], [{ model: Tag, as: "stages" }, "kanban", "ASC"]]
+  });
+
+  const funnelStatusSummary = await Promise.all(
+    funnels.map(async funnel => {
+      const stages = (funnel.stages || []).slice().sort((a, b) => (a.kanban || 0) - (b.kanban || 0));
+
+      const stageStats = await Promise.all(
+        stages.map(async stage => {
+          let count = 0;
+
+          if (funnel.type === "contact") {
+            count = await ContactTag.count({
+              distinct: true,
+              col: "contactId",
+              where: { tagId: stage.id }
+            });
+          } else {
+            count = await TicketTag.count({
+              distinct: true,
+              col: "ticketId",
+              where: { tagId: stage.id },
+              include: [
+                {
+                  model: Ticket,
+                  attributes: [],
+                  required: true,
+                  where: {
+                    companyId,
+                    status: { [Op.in]: ["open", "pending"] }
+                  }
+                }
+              ]
+            });
+          }
+
+          return {
+            id: stage.id,
+            name: stage.name,
+            color: stage.color || funnel.color,
+            count
+          };
+        })
+      );
+
+      const total = stageStats.reduce((acc, s) => acc + Number(s.count || 0), 0);
+
+      return {
+        id: funnel.id,
+        name: funnel.name,
+        type: funnel.type,
+        color: funnel.color,
+        total,
+        stages: stageStats.map(s => ({
+          ...s,
+          percentage: total > 0 ? Number(((Number(s.count || 0) / total) * 100).toFixed(1)) : 0
+        }))
+      };
+    })
+  );
+
   return {
     ticketsStatusSummary: await ticketsStatusSummary(companyId),
-    usersStatusSummary: await usersStatusSummary(companyId)
+    usersStatusSummary: await usersStatusSummary(companyId),
+    funnelStatusSummary
   };
 }
 

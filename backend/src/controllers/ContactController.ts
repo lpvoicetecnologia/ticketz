@@ -2,6 +2,7 @@ import * as Yup from "yup";
 import { Request, Response } from "express";
 import { parse as csvParser, stringify } from "csv";
 import fs from "fs";
+import { Op } from "sequelize";
 import { getIO } from "../libs/socket";
 
 import ListContactsService from "../services/ContactServices/ListContactsService";
@@ -20,6 +21,8 @@ import SimpleListService, {
   SearchContactParams
 } from "../services/ContactServices/SimpleListService";
 import ContactCustomField from "../models/ContactCustomField";
+import ContactTag from "../models/ContactTag";
+import Tag from "../models/Tag";
 
 import { logger } from "../utils/logger";
 import Contact from "../models/Contact";
@@ -239,6 +242,28 @@ export const storeTag = async (
   }
 
   const contact = await ShowContactService(contactId, companyId);
+
+  const tag = await Tag.findOne({ where: { id: tagId, companyId } });
+  if (!tag) {
+    throw new AppError("ERR_NO_TAG_FOUND", 404);
+  }
+
+  if (tag.funnelId) {
+    const funnelTags = await Tag.findAll({
+      where: { companyId, funnelId: tag.funnelId },
+      attributes: ["id"]
+    });
+    const funnelTagIds = funnelTags.map(t => t.id);
+
+    if (funnelTagIds.length > 0) {
+      await ContactTag.destroy({
+        where: {
+          contactId: Number(contactId),
+          tagId: { [Op.in]: funnelTagIds }
+        }
+      });
+    }
+  }
 
   await contact.$add("tags", tagId);
 

@@ -27,6 +27,8 @@ type IndexQuery = {
   contactId: string;
   tags: string;
   users: string;
+  funnelId: string;
+  stageId: string;
 };
 
 interface TicketData {
@@ -54,7 +56,9 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     users: userIdsStringified,
     withUnreadMessages,
     notClosed,
-    all
+    all,
+    funnelId,
+    stageId
   } = req.query as IndexQuery;
 
   const userId = req.user.id;
@@ -93,7 +97,9 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     withUnreadMessages,
     notClosed: !!notClosed,
     all: !!all,
-    companyId
+    companyId,
+    funnelId: funnelId ? Number(funnelId) : undefined,
+    stageId: stageId ? Number(stageId) : undefined
   });
 
   return res.status(200).json({ tickets, count, hasMore });
@@ -113,7 +119,9 @@ export const kanban = async (
     queueIds: queueIdsStringified,
     tags: tagIdsStringified,
     users: userIdsStringified,
-    withUnreadMessages
+    withUnreadMessages,
+    funnelId,
+    stageId
   } = req.query as IndexQuery;
 
   const userId = req.user.id;
@@ -147,7 +155,9 @@ export const kanban = async (
     userId,
     queueIds,
     withUnreadMessages,
-    companyId
+    companyId,
+    funnelId: funnelId ? Number(funnelId) : undefined,
+    stageId: stageId ? Number(stageId) : undefined
   });
 
   return res.status(200).json({ tickets, count, hasMore });

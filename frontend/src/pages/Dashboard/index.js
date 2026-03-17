@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
+import { useHistory } from "react-router-dom";
 
 import Paper from "@material-ui/core/Paper";
 import Container from "@material-ui/core/Container";
@@ -194,12 +195,31 @@ const useStyles = makeStyles((theme) => ({
   },
   clickpointer: {
     cursor: "pointer"
+  },
+  funnelCard: {
+    padding: 16,
+    border: `1px solid ${grey[300]}`,
+    borderRadius: 8,
+    minHeight: 180,
+    cursor: "pointer"
+  },
+  funnelStageRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 8
+  },
+  funnelStageBar: {
+    height: 12,
+    borderRadius: 10,
+    width: "100%"
   }
 }));
 
 const InfoCard = ({ title, value, icon }) => {
   const classes = useStyles();
-  
+
   return (
     <Grid item xs={12} sm={6} md={3}>
       <Paper
@@ -264,6 +284,7 @@ const InfoRingCard = ({ title, value, graph }) => {
 
 const Dashboard = () => {
   const classes = useStyles();
+  const history = useHistory();
   const [period, setPeriod] = useState(0);
   const [currentUser, setCurrentUser] = useState({});
   const [dateFrom, setDateFrom] = useState(
@@ -271,12 +292,12 @@ const Dashboard = () => {
   );
   const [dateTo, setDateTo] = useState(moment().format("YYYY-MM-DDTHH") + ":59");
   const { getCurrentUserInfo } = useAuth();
-    
+
   const [supportPix, setSupportPix] = useState(false);
   const [supportIsBr, setSupportIsBr] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [proInstructionsOpen, setProInstructionsOpen] = useState(false);
-  
+
   const [usersOnlineTotal, setUsersOnlineTotal] = useState(0);
   const [usersOfflineTotal, setUsersOfflineTotal] = useState(0);
   const [usersStatusChartData, setUsersStatusChartData] = useState([]);
@@ -284,22 +305,23 @@ const Dashboard = () => {
   const [pendingChartData, setPendingChartData] = useState([]);
   const [openedTotal, setOpenedTotal] = useState(0);
   const [openedChartData, setOpenedChartData] = useState([]);
-  
+  const [funnelSummary, setFunnelSummary] = useState([]);
+
   const [ticketsData, setTicketsData] = useState({});
   const [usersData, setUsersData] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   const socketManager = useContext(SocketContext);
-    
+
   async function showProInstructions() {
     if (gitinfo.commitHash) {
       setProInstructionsOpen(true);
       return;
     }
-    
+
     window.open("https://pro.ticke.tz", "_blank");
   }
-  
+
   useEffect(() => {
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
@@ -310,10 +332,10 @@ const Dashboard = () => {
         }
       });
   }, []);
-  
+
   useEffect(() => {
     const socket = socketManager.GetSocket(companyId);
-    
+
     socket.on("userOnlineChange", updateStatus);
     socket.on("counter", updateStatus);
 
@@ -321,7 +343,7 @@ const Dashboard = () => {
       socket.disconnect();
     }
   }, [socketManager]);
-  
+
   useEffect(() => {
     getCurrentUserInfo().then(
       (user) => {
@@ -331,19 +353,19 @@ const Dashboard = () => {
         setCurrentUser(user);
       }
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(async () => {
     const registry = await api.get("/ticketz/registry");
 
-    setRegistered( registry?.data?.disabled || !!(registry?.data?.whatsapp ) );
+    setRegistered(registry?.data?.disabled || !!(registry?.data?.whatsapp));
   }, []);
-    
+
   useEffect(() => {
     fetchData();
   }, [period]);
-  
+
   async function handleChangePeriod(value) {
     setPeriod(value);
   }
@@ -408,13 +430,19 @@ const Dashboard = () => {
         setPendingChartData(pendingChartData);
         setOpenedTotal(openedTotal);
         setOpenedChartData(openedChartData);
+        setFunnelSummary(data.funnelStatusSummary || []);
       }
-    ).catch(() => {});
+    ).catch(() => { });
   }
-  
+
+  const handleOpenFunnelKanban = (funnel) => {
+    if (!funnel?.id) return;
+    history.push(`/kanban?funnelId=${funnel.id}&type=${funnel.type || "ticket"}`);
+  };
+
   async function fetchData() {
     let params = { tz: getTimezoneOffset() };
-    
+
     const days = Number(period);
 
     if (days) {
@@ -450,7 +478,7 @@ const Dashboard = () => {
         if (result?.data) {
           setTicketsData(result.data);
         }
-      }).catch(() => {});
+      }).catch(() => { });
 
     setLoadingUsers(true);
     api.get("/dashboard/users", { params }).then(
@@ -459,7 +487,7 @@ const Dashboard = () => {
           setUsersData(result.data);
           setLoadingUsers(false);
         }
-      }).catch(() => {});
+      }).catch(() => { });
   }
 
   useEffect(() => {
@@ -469,59 +497,59 @@ const Dashboard = () => {
   const companyId = localStorage.getItem("companyId");
 
   function renderFilters() {
-      return (
-        <>
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl className={classes.selectContainer}>
-              <InputLabel id="period-selector-label">{i18n.t("dashboard.filter.period")}</InputLabel>
-              <Select
-                labelId="period-selector-label"
-                id="period-selector"
-                value={period}
-                onChange={(e) => handleChangePeriod(e.target.value)}
-              >
-                <MenuItem value={0}>{i18n.t("dashboard.filter.custom")}</MenuItem>
-                <MenuItem value={3}>{i18n.t("dashboard.filter.last3days")}</MenuItem>
-                <MenuItem value={7}>{i18n.t("dashboard.filter.last7days")}</MenuItem>
-                <MenuItem value={15}>{i18n.t("dashboard.filter.last14days")}</MenuItem>
-                <MenuItem value={30}>{i18n.t("dashboard.filter.last30days")}</MenuItem>
-                <MenuItem value={90}>{i18n.t("dashboard.filter.last90days")}</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          {!period &&
-            <>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label={i18n.t("dashboard.date.start")}
-                  type="datetime-local"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  onBlur={fetchData}
-                  className={classes.fullWidth}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label={i18n.t("dashboard.date.end")}
-                  type="datetime-local"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  onBlur={fetchData}
-                  className={classes.fullWidth}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-              </Grid>
-            </>
-          }
-          <Grid item xs={12} sm={6} md={period ? 9 : 3} />
-        </>
-      );
+    return (
+      <>
+        <Grid item xs={12} sm={6} md={3}>
+          <FormControl className={classes.selectContainer}>
+            <InputLabel id="period-selector-label">{i18n.t("dashboard.filter.period")}</InputLabel>
+            <Select
+              labelId="period-selector-label"
+              id="period-selector"
+              value={period}
+              onChange={(e) => handleChangePeriod(e.target.value)}
+            >
+              <MenuItem value={0}>{i18n.t("dashboard.filter.custom")}</MenuItem>
+              <MenuItem value={3}>{i18n.t("dashboard.filter.last3days")}</MenuItem>
+              <MenuItem value={7}>{i18n.t("dashboard.filter.last7days")}</MenuItem>
+              <MenuItem value={15}>{i18n.t("dashboard.filter.last14days")}</MenuItem>
+              <MenuItem value={30}>{i18n.t("dashboard.filter.last30days")}</MenuItem>
+              <MenuItem value={90}>{i18n.t("dashboard.filter.last90days")}</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        {!period &&
+          <>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                label={i18n.t("dashboard.date.start")}
+                type="datetime-local"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                onBlur={fetchData}
+                className={classes.fullWidth}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                label={i18n.t("dashboard.date.end")}
+                type="datetime-local"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                onBlur={fetchData}
+                className={classes.fullWidth}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+          </>
+        }
+        <Grid item xs={12} sm={6} md={period ? 9 : 3} />
+      </>
+    );
   }
 
   if (currentUser?.profile !== "admin") {
@@ -530,98 +558,98 @@ const Dashboard = () => {
       </div>
     );
   }
-      
+
   return (
     <div>
       <Container maxWidth="lg" className={classes.container}>
         <Grid container spacing={3} justifyContent="flex-start">
 
-          { !localStorage.getItem("hideAds") && <OnlyForSuperUser
+          {!localStorage.getItem("hideAds") && <OnlyForSuperUser
             user={currentUser}
             yes={() => (
               <>
-              <Grid item xs={12}>
-                {!registered &&
-                  <Paper className={classes.ticketzRegistryPaper}>
-                    <TicketzRegistry onRegister={setRegistered} />
+                <Grid item xs={12}>
+                  {!registered &&
+                    <Paper className={classes.ticketzRegistryPaper}>
+                      <TicketzRegistry onRegister={setRegistered} />
+                    </Paper>
+                  }
+                </Grid>
+                <Grid item xs={12} md={8}>
+                  <Paper className={clsx(classes.ticketzProPaper, {
+                    [classes.clickpointer]: !proInstructionsOpen,
+                  })} onClick={() => showProInstructions()}>
+                    <Grid container justifyContent="flex-end">
+                      <Grid className={classes.ticketzProBox} item xs={12} sm={4}>
+                        <div>
+                          <img className={classes.ticketzProScreen} src="https://pro.ticke.tz/images/0/7/3/0/b/0730b234af7b4b0dac72d09828863bb7cb9193ea-ticketz-computador.png" />
+                        </div>
+                      </Grid>
+                      {!proInstructionsOpen &&
+                        <Grid className={classes.ticketzProBox} item xs={12} sm={8}>
+                          <Typography className={classes.ticketzProTitle} component="h3" variant="h5" gutterBottom>
+                            Ticketz PRO
+                          </Typography>
+                          <Typography component="h4" variant="h7" gutterBottom>
+                            <ul className={classes.ticketzProFeatures}>
+                              <li>Whatsapp Oficial - Instagram - Messenger e outros</li>
+                              <li>Features exclusivas</li>
+                              <li>Suporte Avançado</li>
+                              <li>Migração Facilitada</li>
+                            </ul>
+                          </Typography>
+                          <Typography component="h3" variant="h5">
+                            Assine por R$ 199/mês
+                          </Typography>
+                          <Typography component="h3" variant="h7" gutterBottom>
+                            direto dentro do sistema
+                          </Typography>
+                          {gitinfo.commitHash &&
+                            <Typography component="h4" variant="h6">
+                              Clique para instruções de Upgrade
+                            </Typography>
+                          }
+                          {!gitinfo.commitHash &&
+                            <Typography component="h3" variant="h5">
+                              Clique para visitar o site!
+                            </Typography>
+                          }
+                        </Grid>
+                      }
+                      {proInstructionsOpen &&
+                        <Grid className={classes.ticketzProBox} item xs={12} sm={8}>
+                          <Typography className={classes.ticketzProTitle} component="h3" variant="h5" gutterBottom>
+                            Instruções de Upgrade
+                          </Typography>
+                          <Typography paragraph>
+                            Se você instalou as imagens disponibilizadas pelo projeto em um
+                            servidor ou VPS utilizando as instruções facilitadas tudo o que
+                            você precisa fazer é acessar seu servidor e digitar o comando abaixo:
+                          </Typography>
+                          <Typography className={classes.ticketzProCommand} paragraph>
+                            curl -sSL update.ticke.tz | sudo bash -s pro
+                          </Typography>
+                          <Typography paragraph>
+                            Em instantes o Ticketz PRO estará instalado com todos os teus dados,
+                            agora só precisa ir até o menu de usuário, clicar em "Assinatura do
+                            Ticketz PRO" e fazer a sua assinatura.
+                          </Typography>
+                          <Typography paragraph>
+                            Se a tua instalação for diferente ou acredita que precisa
+                            de auxílio para instalar o Ticketz
+                            Pro, <a href="https://wa.me/554935670707"> entre
+                              em contato</a> que nós ajudamos!
+                          </Typography>
+                        </Grid>
+                      }
+                    </Grid>
                   </Paper>
-                }
-              </Grid>
-              <Grid item xs={12} md={8}>
-                <Paper className={clsx(classes.ticketzProPaper, {
-                  [classes.clickpointer]: !proInstructionsOpen,
-                })} onClick={() => showProInstructions()}>
-                  <Grid container justifyContent="flex-end">
-                    <Grid className={classes.ticketzProBox} item xs={12} sm={4}>
-                      <div>
-                        <img className={classes.ticketzProScreen} src="https://pro.ticke.tz/images/0/7/3/0/b/0730b234af7b4b0dac72d09828863bb7cb9193ea-ticketz-computador.png" />
-                      </div>
-                    </Grid>
-                    { !proInstructionsOpen &&
-                    <Grid className={classes.ticketzProBox} item xs={12} sm={8}>
-                      <Typography className={classes.ticketzProTitle} component="h3" variant="h5" gutterBottom>
-                        Ticketz PRO
-                      </Typography>
-                      <Typography component="h4" variant="h7" gutterBottom>
-                      <ul className={classes.ticketzProFeatures}>
-                        <li>Whatsapp Oficial - Instagram - Messenger e outros</li>
-                        <li>Features exclusivas</li>
-                        <li>Suporte Avançado</li>
-                        <li>Migração Facilitada</li>
-                      </ul>
-                      </Typography>
-                      <Typography component="h3" variant="h5">
-                        Assine por R$ 199/mês
-                      </Typography>
-                      <Typography component="h3" variant="h7" gutterBottom>
-                        direto dentro do sistema
-                      </Typography>
-                      { gitinfo.commitHash && 
-                      <Typography component="h4" variant="h6">
-                        Clique para instruções de Upgrade
-                      </Typography>
-                      }
-                      { !gitinfo.commitHash && 
-                      <Typography component="h3" variant="h5">
-                        Clique para visitar o site!
-                      </Typography>
-                      }
-                    </Grid>
-                    }
-                    { proInstructionsOpen &&
-                    <Grid className={classes.ticketzProBox} item xs={12} sm={8}>
-                      <Typography className={classes.ticketzProTitle} component="h3" variant="h5" gutterBottom>
-                        Instruções de Upgrade
-                      </Typography>
-                      <Typography paragraph>
-                        Se você instalou as imagens disponibilizadas pelo projeto em um
-                        servidor ou VPS utilizando as instruções facilitadas tudo o que
-                        você precisa fazer é acessar seu servidor e digitar o comando abaixo:
-                      </Typography>
-                      <Typography className={classes.ticketzProCommand} paragraph>
-                        curl -sSL update.ticke.tz | sudo bash -s pro
-                      </Typography>
-                      <Typography paragraph>
-                        Em instantes o Ticketz PRO estará instalado com todos os teus dados,
-                        agora só precisa ir até o menu de usuário, clicar em "Assinatura do
-                        Ticketz PRO" e fazer a sua assinatura.
-                      </Typography>
-                      <Typography paragraph>
-                        Se a tua instalação for diferente ou acredita que precisa
-                        de auxílio para instalar o Ticketz
-                        Pro, <a href="https://wa.me/554935670707"> entre
-                        em contato</a> que nós ajudamos!
-                      </Typography>
-                    </Grid>
-                    }
-                  </Grid>
-                </Paper>
-              </Grid>
+                </Grid>
               </>
             )} />
           }
 
-          { !localStorage.getItem("hideAds") && <OnlyForSuperUser
+          {!localStorage.getItem("hideAds") && <OnlyForSuperUser
             user={currentUser}
             yes={() => (
               <Grid item xs={12} md={4}>
@@ -629,37 +657,37 @@ const Dashboard = () => {
                   <Typography style={{ overflow: "hidden" }} component="h2" variant="h6" gutterBottom>
                     {i18n.t("ticketz.support.title")}
                   </Typography>
-                    <Grid container justifyContent="flex-end">
-                      <Grid className={classes.supportBox} style={{maxHeight: supportPix ? 300 : 35} } item xs={12}>
-                        <Typography
-                          className={classes.clickpointer}
-                          component="h3" variant="h6"
-                          gutterBottom onClick={() => setSupportPix(true)}>
-                          PIX
-                        </Typography>
-                        <div
-                          className={classes.clickpointer}
-                          onClick={() => {
-                            copyToClipboard("1ab11506-9480-4303-8e1e-988e7c49ed4d");
-                            toast.success("Chave PIX copiada");
-                          }
-                          }>
-                          <div>
-                            <img className={classes.paymentpix} src="/ticketzpix.png" />
-                          </div>
-                          <Typography className={classes.pixkey} component="body2" paragraph>
-                            Clique para copiar a chave PIX
-                          </Typography>
+                  <Grid container justifyContent="flex-end">
+                    <Grid className={classes.supportBox} style={{ maxHeight: supportPix ? 300 : 35 }} item xs={12}>
+                      <Typography
+                        className={classes.clickpointer}
+                        component="h3" variant="h6"
+                        gutterBottom onClick={() => setSupportPix(true)}>
+                        PIX
+                      </Typography>
+                      <div
+                        className={classes.clickpointer}
+                        onClick={() => {
+                          copyToClipboard("1ab11506-9480-4303-8e1e-988e7c49ed4d");
+                          toast.success("Chave PIX copiada");
+                        }
+                        }>
+                        <div>
+                          <img className={classes.paymentpix} src="/ticketzpix.png" />
                         </div>
-                      </Grid>
-                      <Grid className={classes.supportBox}  style={{maxHeight: supportPix ? 35 : 300 }} item xs={12} onClick={() => setSupportPix(false)}>
-                        <Typography
-                          className={classes.clickpointer}
-                          component="h3" variant="h6"
-                          gutterBottom onClick={() => setSupportPix(true)}>
-                          {i18n.t("ticketz.support.mercadopagotitle")}
+                        <Typography className={classes.pixkey} component="body2" paragraph>
+                          Clique para copiar a chave PIX
                         </Typography>
-                        { supportPix || <> 
+                      </div>
+                    </Grid>
+                    <Grid className={classes.supportBox} style={{ maxHeight: supportPix ? 35 : 300 }} item xs={12} onClick={() => setSupportPix(false)}>
+                      <Typography
+                        className={classes.clickpointer}
+                        component="h3" variant="h6"
+                        gutterBottom onClick={() => setSupportPix(true)}>
+                        {i18n.t("ticketz.support.mercadopagotitle")}
+                      </Typography>
+                      {supportPix || <>
                         {supportIsBr && <>
                           <Typography component="body2" paragraph>
                             {i18n.t("ticketz.support.recurringbrl")}
@@ -676,12 +704,12 @@ const Dashboard = () => {
                             <img className={classes.paymentimg} src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" />
                           </a></div>
                         </>}
-                        </> }
-                      </Grid>
+                      </>}
                     </Grid>
+                  </Grid>
                 </Paper>
               </Grid>
-            )} /> }
+            )} />}
 
           {/* USUARIOS ONLINE */}
           <InfoRingCard
@@ -709,6 +737,36 @@ const Dashboard = () => {
               <SmallPie chartData={openedChartData} />
             }
           />
+
+          {Array.isArray(funnelSummary) && funnelSummary.map((funnel) => (
+            <Grid item xs={12} md={4} key={funnel.id}>
+              <Paper
+                className={classes.funnelCard}
+                elevation={2}
+                onClick={() => handleOpenFunnelKanban(funnel)}
+              >
+                <Typography variant="h6" gutterBottom>
+                  {funnel.name}
+                </Typography>
+                {(funnel.stages || []).map((stage) => (
+                  <div key={stage.id} className={classes.funnelStageRow}>
+                    <Typography variant="body2" style={{ minWidth: 140 }}>
+                      {stage.name} ({stage.percentage || 0}%)
+                    </Typography>
+                    <div style={{ width: "100%", background: "#efefef", borderRadius: 10 }}>
+                      <div
+                        className={classes.funnelStageBar}
+                        style={{
+                          width: `${stage.percentage || 0}%`,
+                          backgroundColor: stage.color || funnel.color || "#888"
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </Paper>
+            </Grid>
+          ))}
 
           {/* FILTROS */}
           {renderFilters()}
@@ -750,7 +808,7 @@ const Dashboard = () => {
                 end={ticketsData.end}
                 hour_start={ticketsData.hour_start}
                 hour_end={ticketsData.hour_end}
-               />
+              />
             </Paper>
           </Grid>
 

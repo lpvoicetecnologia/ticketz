@@ -109,6 +109,8 @@ const CreateWhatsAppService = async ({
        planChannelLimit = company.plan.connectionsWhatsappCloud;
     } else if (channel === "instagram" && company.plan.connectionsInstagram !== null) {
        planChannelLimit = company.plan.connectionsInstagram;
+    } else if (channel === "facebook" && company.plan.connectionsFacebook !== null) {
+       planChannelLimit = company.plan.connectionsFacebook;
     } else if (channel === "telegram" && company.plan.connectionsTelegram !== null) {
        planChannelLimit = company.plan.connectionsTelegram;
     } else if (channel === "email" && company.plan.connectionsEmail !== null) {

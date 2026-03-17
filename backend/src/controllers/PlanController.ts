@@ -21,6 +21,13 @@ type StorePlanData = {
   id?: number | string;
   users: number | 0;
   connections: number | 0;
+  connectionsWhatsapp?: number;
+  connectionsWhatsappCloud?: number;
+  connectionsInstagram?: number;
+  connectionsFacebook?: number;
+  connectionsTelegram?: number;
+  connectionsEmail?: number;
+  connectionsWavoip?: number;
   queues: number | 0;
   value: number;
   currency?: string;
@@ -32,6 +39,13 @@ type UpdatePlanData = {
   id?: number | string;
   users?: number;
   connections?: number;
+  connectionsWhatsapp?: number;
+  connectionsWhatsappCloud?: number;
+  connectionsInstagram?: number;
+  connectionsFacebook?: number;
+  connectionsTelegram?: number;
+  connectionsEmail?: number;
+  connectionsWavoip?: number;
   queues?: number;
   value?: number;
   currency?: string;
@@ -104,7 +118,23 @@ export const update = async (
     throw new AppError(err.message);
   }
 
-  const { id, name, users, connections, queues, value, currency, isPublic } =
+  const {
+    id,
+    name,
+    users,
+    connections,
+    connectionsWhatsapp,
+    connectionsWhatsappCloud,
+    connectionsInstagram,
+    connectionsFacebook,
+    connectionsTelegram,
+    connectionsEmail,
+    connectionsWavoip,
+    queues,
+    value,
+    currency,
+    isPublic
+  } =
     planData;
 
   const plan = await UpdatePlanService({
@@ -112,6 +142,13 @@ export const update = async (
     name,
     users,
     connections,
+    connectionsWhatsapp,
+    connectionsWhatsappCloud,
+    connectionsInstagram,
+    connectionsFacebook,
+    connectionsTelegram,
+    connectionsEmail,
+    connectionsWavoip,
     queues,
     value,
     currency,

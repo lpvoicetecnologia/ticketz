@@ -15,6 +15,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import WhatsAppIcon from "@material-ui/icons/WhatsApp";
 import EmailIcon from "@material-ui/icons/Email";
 import SendIcon from "@material-ui/icons/Send";
+import FacebookIcon from "@material-ui/icons/Facebook";
 
 const useStyles = makeStyles((theme) => ({
     card: {
@@ -74,6 +75,13 @@ const channels = [
         color: "#E1306C",
     },
     {
+        id: "facebook",
+        label: "Facebook Messenger",
+        description: "Mensagens da Página",
+        icon: "facebook",
+        color: "#1877F2",
+    },
+    {
         id: "telegram",
         label: "Telegram",
         description: "Bot via API Oficial",
@@ -113,6 +121,13 @@ const ConnectionTypeModal = ({ open, onClose, onSelect }) => {
             case "telegram":
                 return (
                     <SendIcon
+                        className={classes.icon}
+                        style={{ color: channel.color }}
+                    />
+                );
+            case "facebook":
+                return (
+                    <FacebookIcon
                         className={classes.icon}
                         style={{ color: channel.color }}
                     />

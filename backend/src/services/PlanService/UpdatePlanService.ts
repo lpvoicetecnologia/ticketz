@@ -9,6 +9,7 @@ interface PlanData {
   connectionsWhatsapp?: number;
   connectionsWhatsappCloud?: number;
   connectionsInstagram?: number;
+  connectionsFacebook?: number;
   connectionsTelegram?: number;
   connectionsEmail?: number;
   connectionsWavoip?: number;
@@ -19,7 +20,7 @@ interface PlanData {
 }
 
 const UpdatePlanService = async (planData: PlanData): Promise<Plan> => {
-  const { id, name, users, connections, connectionsWhatsapp, connectionsWhatsappCloud, connectionsInstagram, connectionsTelegram, connectionsEmail, connectionsWavoip, queues, value, currency, isPublic } =
+  const { id, name, users, connections, connectionsWhatsapp, connectionsWhatsappCloud, connectionsInstagram, connectionsFacebook, connectionsTelegram, connectionsEmail, connectionsWavoip, queues, value, currency, isPublic } =
     planData;
 
   const plan = await Plan.findByPk(id);
@@ -35,6 +36,7 @@ const UpdatePlanService = async (planData: PlanData): Promise<Plan> => {
     connectionsWhatsapp,
     connectionsWhatsappCloud,
     connectionsInstagram,
+    connectionsFacebook,
     connectionsTelegram,
     connectionsEmail,
     connectionsWavoip,

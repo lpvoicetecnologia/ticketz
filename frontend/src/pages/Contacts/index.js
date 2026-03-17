@@ -87,6 +87,13 @@ const reducer = (state, action) => {
   }
 };
 
+const formatTagWithFunnel = (tag) => {
+  if (tag?.funnel?.name) {
+    return `${tag.funnel.name} • ${tag.name}`;
+  }
+  return tag?.name || "";
+};
+
 const useStyles = makeStyles((theme) => ({
   mainPaper: {
     flex: 1,
@@ -94,7 +101,7 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "scroll",
     ...theme.scrollbarStyles,
   },
-  
+
   selectContainer: {
     width: "100%",
     textAlign: "left",
@@ -149,7 +156,7 @@ const Contacts = () => {
       });
     });
   }, []);
-  
+
   useEffect(() => {
     dispatch({ type: "RESET" });
     setPageNumber(1);
@@ -188,7 +195,7 @@ const Contacts = () => {
         dispatch({ type: "DELETE_CONTACT", payload: +data.contactId });
       }
     }
-    
+
     socket.on(`company-${companyId}-contact`, onContact);
 
     return () => {
@@ -247,7 +254,7 @@ const Contacts = () => {
       loadMore();
     }
   };
-  
+
   const importCsv = async () => {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -272,7 +279,7 @@ const Contacts = () => {
       }
     };
   }
-  
+
   const exportCsv = async () => {
     try {
       const { data } = await api.get("/contacts/exportCsv", {
@@ -288,7 +295,7 @@ const Contacts = () => {
       toastError(err);
     }
   }
-  
+
   return (
     <MainContainer className={classes.mainContainer}>
       <ContactModal
@@ -431,7 +438,7 @@ const Contacts = () => {
                     <div className={classes.tagsdiv}>
                       {
                         contact.tags.map((tag) => (
-                          <Tooltip title={tag.name} placement="top" arrow>
+                          <Tooltip title={formatTagWithFunnel(tag)} placement="top" arrow>
                             <div
                               key={tag.id}
                               className={classes.tag}
@@ -439,7 +446,7 @@ const Contacts = () => {
                                 backgroundColor: tag.color
                               }}
                             >
-                              {tag.name}
+                              {formatTagWithFunnel(tag)}
                             </div>
                           </Tooltip>
                         ))

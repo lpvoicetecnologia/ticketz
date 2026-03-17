@@ -1,5 +1,7 @@
 import { Sequelize, Op } from "sequelize";
 import Contact from "../../models/Contact";
+import Tag from "../../models/Tag";
+import Funnel from "../../models/Funnel";
 
 interface Request {
   searchParam?: string;
@@ -45,7 +47,20 @@ const ListContactsService = async ({
 
   const { count, rows: contacts } = await Contact.findAndCountAll({
     where: whereCondition,
-    include: ["tags"],
+    include: [
+      {
+        model: Tag,
+        as: "tags",
+        include: [
+          {
+            model: Funnel,
+            as: "funnel",
+            attributes: ["id", "name", "type", "color"],
+            required: false
+          }
+        ]
+      }
+    ],
     limit,
     offset,
     order: [[Sequelize.col("Contact.name"), "ASC"]]

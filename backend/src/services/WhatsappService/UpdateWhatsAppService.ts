@@ -157,7 +157,12 @@ const UpdateWhatsAppService = async ({
 
   // Para canais stateless com token/configuração recebida, revalidar e ativar canal
   const shouldRevalidate =
-    whatsapp.channel === "telegram" && telegramToken;
+    (whatsapp.channel === "telegram" && Boolean(telegramToken)) ||
+    (whatsapp.channel === "whatsapp_cloud" && Boolean(facebookUserToken || facebookPageUserId)) ||
+    (whatsapp.channel === "instagram" && Boolean(facebookUserToken || facebookPageUserId)) ||
+    (whatsapp.channel === "facebook" && Boolean(facebookUserToken || facebookPageUserId)) ||
+    (whatsapp.channel === "email" &&
+      Boolean(emailSmtpHost || emailSmtpPort || emailSmtpUser || emailSmtpPass));
   if (shouldRevalidate) {
     // Não bloqueia a resposta — executa em background
     Promise.resolve().then(() => {

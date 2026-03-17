@@ -10,6 +10,7 @@ interface QueueData {
   greetingMessage?: string;
   outOfHoursMessage?: string;
   schedules?: any[];
+  defaultTagId?: number;
 }
 
 const UpdateQueueService = async (

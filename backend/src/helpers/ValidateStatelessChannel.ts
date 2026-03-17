@@ -1,7 +1,7 @@
 /**
  * ValidateStatelessChannel
  *
- * Valida e ativa canais stateless (Telegram, WhatsApp Cloud API, Instagram, Email).
+ * Valida e ativa canais stateless (Telegram, WhatsApp Cloud API, Instagram, Facebook Messenger, Email).
  * Esses canais não usam sessão Baileys — o status é CONNECTED quando a configuração
  * está correta e a API responde com sucesso.
  */
@@ -11,7 +11,7 @@ import { logger } from "../utils/logger";
 import Whatsapp from "../models/Whatsapp";
 import { getIO } from "../libs/socket";
 
-const GRAPH_API_URL = "https://graph.facebook.com/v19.0";
+const GRAPH_API_URL = "https://graph.facebook.com/v25.0";
 
 /**
  * Configura o webhook do Telegram com retry/backoff exponencial para evitar 429.
@@ -206,6 +206,48 @@ async function validateInstagram(whatsapp: Whatsapp): Promise<boolean> {
 }
 
 /**
+ * Valida um canal Facebook Messenger: verifica token de página e Page ID via Graph API.
+ */
+async function validateFacebook(whatsapp: Whatsapp): Promise<boolean> {
+  const { facebookUserToken, facebookPageUserId } = whatsapp;
+
+  if (!facebookUserToken || !facebookPageUserId) {
+    logger.warn(
+      { id: whatsapp.id },
+      "ValidateStatelessChannel: Facebook token or page ID not configured"
+    );
+    return false;
+  }
+
+  try {
+    const resp = await axios.get(
+      `${GRAPH_API_URL}/${facebookPageUserId}`,
+      {
+        headers: { Authorization: `Bearer ${facebookUserToken}` },
+        params: { fields: "id,name" },
+        timeout: 10000
+      }
+    );
+
+    if (resp.data?.id) {
+      logger.info(
+        { pageId: facebookPageUserId, id: whatsapp.id },
+        "ValidateStatelessChannel: Facebook page ID valid"
+      );
+      return true;
+    }
+
+    return false;
+  } catch (err) {
+    logger.error(
+      { err, id: whatsapp.id },
+      "ValidateStatelessChannel: Facebook validation error"
+    );
+    return false;
+  }
+}
+
+/**
  * Valida um canal Email: verifica configuração SMTP básica.
  */
 async function validateEmail(whatsapp: Whatsapp): Promise<boolean> {
@@ -269,6 +311,9 @@ export async function validateAndConnectStatelessChannel(
       break;
     case "instagram":
       isValid = await validateInstagram(whatsapp);
+      break;
+    case "facebook":
+      isValid = await validateFacebook(whatsapp);
       break;
     case "email":
       isValid = await validateEmail(whatsapp);

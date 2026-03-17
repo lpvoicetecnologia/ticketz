@@ -17,40 +17,7 @@ import Ticket from "../models/Ticket";
 import { sendWhatsappUpdate } from "../services/WhatsappService/SocketSendWhatsappUpdate";
 import { logger } from "../utils/logger";
 
-// ─── Telegram auto-webhook helper ─────────────────────────────────────────────
-const registerTelegramWebhook = (token: string): void => {
-  const backendUrl = process.env.BACKEND_URL || "";
-  if (!backendUrl || !token) {
-    logger.warn("registerTelegramWebhook: BACKEND_URL not set, skipping");
-    return;
-  }
-  const webhookUrl = `${backendUrl}/webhook/telegram/${token}`;
-  const body = JSON.stringify({ url: webhookUrl, drop_pending_updates: true });
-  const options = {
-    hostname: "api.telegram.org",
-    port: 443,
-    path: `/bot${token}/setWebhook`,
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) }
-  };
-  const req = https.request(options, res => {
-    let data = "";
-    res.on("data", chunk => { data += chunk; });
-    res.on("end", () => {
-      try {
-        const parsed = JSON.parse(data);
-        if (parsed.ok) {
-          logger.info({ webhookUrl }, "Telegram webhook registered successfully");
-        } else {
-          logger.warn({ webhookUrl, result: parsed }, "Telegram setWebhook returned non-ok");
-        }
-      } catch (e) { /* ignore */ }
-    });
-  });
-  req.on("error", err => logger.error({ err, webhookUrl }, "Failed to register Telegram webhook"));
-  req.write(body);
-  req.end();
-};
+
 
 interface WhatsappData {
   name: string;
@@ -65,6 +32,10 @@ interface WhatsappData {
   isDefault?: boolean;
   token?: string;
   channel?: string;
+  facebookUserId?: string;
+  facebookUserToken?: string;
+  facebookPageUserId?: string;
+  tokenMeta?: string;
   telegramToken?: string;
   telegramBotName?: string;
   emailSmtpHost?: string;
@@ -102,6 +73,10 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     queueIds,
     token,
     channel,
+    facebookUserId,
+    facebookUserToken,
+    facebookPageUserId,
+    tokenMeta,
     telegramToken,
     telegramBotName,
     emailSmtpHost,
@@ -128,6 +103,10 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     companyId,
     token,
     channel,
+    facebookUserId,
+    facebookUserToken,
+    facebookPageUserId,
+    tokenMeta,
     telegramToken,
     telegramBotName,
     emailSmtpHost,
@@ -171,10 +150,7 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
     throw new AppError("ERR_NO_WAPP_FOUND", 404);
   }
 
-  // Auto-register Telegram webhook if this is a Telegram channel
-  if (whatsapp.channel === "telegram" && whatsapp.telegramToken) {
-    registerTelegramWebhook(whatsapp.telegramToken);
-  }
+
 
   return res.status(200).json(whatsapp);
 };
@@ -198,10 +174,7 @@ export const update = async (
     sendWhatsappUpdate(oldDefaultWhatsapp);
   }
 
-  // Auto-register Telegram webhook on update too
-  if (whatsapp.channel === "telegram" && whatsapp.telegramToken) {
-    registerTelegramWebhook(whatsapp.telegramToken);
-  }
+
 
   return res.status(200).json(whatsapp);
 };

@@ -2,7 +2,7 @@
  * SendWaCloudMessage
  *
  * Envia mensagens (texto, imagens, documentos, áudio, vídeo) pelo canal
- * WhatsApp Cloud API (Meta Graph API v19.0), de forma totalmente independente
+ * WhatsApp Cloud API (Meta Graph API v25.0), de forma totalmente independente
  * do WhatsApp Baileys.
  *
  * Documentação: https://developers.facebook.com/docs/whatsapp/cloud-api/messages
@@ -29,7 +29,7 @@ interface Request {
   media?: Express.Multer.File;
 }
 
-const GRAPH_API_URL = "https://graph.facebook.com/v19.0";
+const GRAPH_API_URL = "https://graph.facebook.com/v25.0";
 
 import saveMediaToFile from "../../helpers/saveMediaFile";
 

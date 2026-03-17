@@ -41,11 +41,34 @@ async function fetchNewEmails(whatsapp: Whatsapp): Promise<void> {
           "";
         const msgId = parsed.messageId || `email-${Date.now()}-${Math.random()}`;
 
+        logger.info(
+          {
+            whatsappId: whatsapp.id,
+            companyId: whatsapp.companyId,
+            channel: "email",
+            fromEmail,
+            msgId,
+            subject
+          },
+          "EmailPoller: inbound message received"
+        );
+
         // Check duplicate
         const MessageModel = require("../../models/Message")
           .default as typeof import("../../models/Message").default;
         const existing = await MessageModel.findOne({ where: { id: msgId } });
-        if (existing) continue;
+        if (existing) {
+          logger.info(
+            {
+              whatsappId: whatsapp.id,
+              companyId: whatsapp.companyId,
+              channel: "email",
+              msgId
+            },
+            "EmailPoller: duplicate message ignored"
+          );
+          continue;
+        }
 
         // Find or create contact
         let contact = await Contact.findOne({
@@ -89,6 +112,17 @@ async function fetchNewEmails(whatsapp: Whatsapp): Promise<void> {
         };
 
         await CreateMessageService({ messageData, companyId: whatsapp.companyId });
+        logger.info(
+          {
+            whatsappId: whatsapp.id,
+            companyId: whatsapp.companyId,
+            channel: "email",
+            msgId,
+            ticketId: ticket.id,
+            contactId: contact.id
+          },
+          "EmailPoller: message persisted and emitted"
+        );
         await ticket.update({ lastMessage: displayBody.slice(0, 200) });
 
         if (ticket.status === "closed") {

@@ -11,7 +11,7 @@ import * as path from "path";
 import saveMediaToFile from "../../helpers/saveMediaFile";
 import Ticket from "../../models/Ticket";
 
-const GRAPH_API_URL = "https://graph.facebook.com/v19.0";
+const GRAPH_API_URL = "https://graph.facebook.com/v25.0";
 
 // Map de tipo WaCloud -> extensão de arquivo padrão
 const TYPE_EXT_MAP: Record<string, string> = {
@@ -133,6 +133,16 @@ export async function processWaCloudWebhook(
 ): Promise<void> {
   try {
     const changes: any[] = (entry as any)?.changes || [];
+    logger.info(
+      {
+        whatsappId: whatsapp.id,
+        companyId: whatsapp.companyId,
+        channel: "whatsapp_cloud",
+        changesCount: changes.length
+      },
+      "WaCloud: inbound webhook processing started"
+    );
+
     for (const change of changes) {
       const value = change?.value;
       if (!value) continue;
@@ -140,10 +150,33 @@ export async function processWaCloudWebhook(
       const messages: any[] = value?.messages || [];
       const metaContacts: any[] = value?.contacts || [];
 
+      logger.info(
+        {
+          whatsappId: whatsapp.id,
+          companyId: whatsapp.companyId,
+          channel: "whatsapp_cloud",
+          messagesCount: messages.length,
+          contactsCount: metaContacts.length
+        },
+        "WaCloud: inbound batch received"
+      );
+
       for (const msg of messages) {
         const from: string = msg.from;
         const msgId: string = msg.id;
         const type: string = msg.type;
+
+        logger.info(
+          {
+            whatsappId: whatsapp.id,
+            companyId: whatsapp.companyId,
+            channel: "whatsapp_cloud",
+            from,
+            msgId,
+            type
+          },
+          "WaCloud: inbound message received"
+        );
 
         const waContact = metaContacts.find((c: any) => c.wa_id === from);
         const contactName = waContact?.profile?.name || from;
@@ -232,7 +265,19 @@ export async function processWaCloudWebhook(
 
         // Check duplicate
         const existing = await Message.findOne({ where: { id: msgId } });
-        if (existing) continue;
+        if (existing) {
+          logger.info(
+            {
+              whatsappId: whatsapp.id,
+              companyId: whatsapp.companyId,
+              channel: "whatsapp_cloud",
+              msgId,
+              ticketId: ticket.id
+            },
+            "WaCloud: duplicate message ignored"
+          );
+          continue;
+        }
 
         const messageData = {
           id: msgId,
@@ -251,6 +296,18 @@ export async function processWaCloudWebhook(
           messageData,
           companyId: whatsapp.companyId
         });
+
+        logger.info(
+          {
+            whatsappId: whatsapp.id,
+            companyId: whatsapp.companyId,
+            channel: "whatsapp_cloud",
+            msgId,
+            ticketId: ticket.id,
+            contactId: contact.id
+          },
+          "WaCloud: message persisted and emitted"
+        );
 
         await ticket.update({ lastMessage: bodyText });
 

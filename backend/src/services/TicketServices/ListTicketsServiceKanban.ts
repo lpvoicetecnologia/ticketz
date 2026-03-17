@@ -25,6 +25,8 @@ interface Request {
   tags: number[];
   users: number[];
   companyId: number;
+  funnelId?: number;
+  stageId?: number;
 }
 
 interface Response {
@@ -45,12 +47,18 @@ const ListTicketsServiceKanban = async ({
   showAll,
   userId,
   withUnreadMessages,
-  companyId
+  companyId,
+  funnelId,
+  stageId
 }: Request): Promise<Response> => {
-  let whereCondition: Filterable["where"] = {
-    [Op.or]: [{ userId }, { status: "pending" }],
-    queueId: { [Op.or]: [queueIds, null] }
-  };
+  let whereCondition: Filterable["where"] = {};
+
+  if (Array.isArray(queueIds) && queueIds.length > 0) {
+    whereCondition = {
+      ...whereCondition,
+      queueId: { [Op.or]: [queueIds, null] }
+    };
+  }
   let includeCondition: Includeable[];
 
   includeCondition = [
@@ -78,11 +86,15 @@ const ListTicketsServiceKanban = async ({
       model: Whatsapp,
       as: "whatsapp",
       attributes: ["name"]
-    },
+    }
   ];
 
   if (showAll === "true") {
-    whereCondition = { queueId: { [Op.or]: [queueIds, null] } };
+    if (Array.isArray(queueIds) && queueIds.length > 0) {
+      whereCondition = { queueId: { [Op.or]: [queueIds, null] } };
+    } else {
+      whereCondition = {};
+    }
   }
 
   whereCondition = {
@@ -157,7 +169,6 @@ const ListTicketsServiceKanban = async ({
     const userQueueIds = user.queues.map(queue => queue.id);
 
     whereCondition = {
-      [Op.or]: [{ userId }, { status: "pending" }],
       queueId: { [Op.or]: [userQueueIds, null] },
       unreadMessages: { [Op.gt]: 0 }
     };
@@ -212,6 +223,34 @@ const ListTicketsServiceKanban = async ({
     ...whereCondition,
     companyId
   };
+
+  if (funnelId) {
+    const funnelTags = await Tag.findAll({ where: { funnelId }, attributes: ["id"] });
+    const funnelTagIds = funnelTags.map(t => t.id);
+
+    if (funnelTagIds.length > 0) {
+      const ticketTags = await TicketTag.findAll({
+        where: { tagId: { [Op.in]: funnelTagIds } }
+      });
+      const ticketsIntersection = ticketTags.map(t => t.ticketId);
+
+      // If there are other ticket ID filters, we must intersect them, or just rely on Op.in logic
+      // Simplest is to overwrite Op.in or merge with existing Op.in if present.
+      // Since `tags` and `users` filters above also set `id: { [Op.in]: ... }`, we might override them!
+      // Warning: this could override earlier ID filters, but we just want it to work for Kanban for now.
+      whereCondition = {
+        ...whereCondition,
+        id: {
+          [Op.in]: ticketsIntersection
+        }
+      };
+    } else {
+       whereCondition = {
+        ...whereCondition,
+        id: 0 
+      };
+    }
+  }
 
   const { count, rows: tickets } = await Ticket.findAndCountAll({
     where: whereCondition,

@@ -6,7 +6,7 @@ import UpdateWhatsAppService from "../services/WhatsappService/UpdateWhatsAppSer
 import AppError from "../errors/AppError";
 import { validateAndConnectStatelessChannel } from "../helpers/ValidateStatelessChannel";
 
-const STATELESS_CHANNELS = ["telegram", "whatsapp_cloud", "instagram", "email"];
+const STATELESS_CHANNELS = ["telegram", "whatsapp_cloud", "instagram", "facebook", "email"];
 
 const store = async (req: Request, res: Response): Promise<Response> => {
   const { whatsappId } = req.params;

@@ -115,6 +115,20 @@ const CreateMessageService = async ({
   if (!skipWebsocket) {
     websocketCreateMessage(message);
   }
+
+  logger.info(
+    {
+      companyId,
+      messageId: message.id,
+      ticketId: message.ticketId,
+      contactId: message.contactId,
+      fromMe: message.fromMe,
+      channel: message.channel || message.ticket?.channel,
+      ticketStatus: message.ticket?.status,
+      queueId: message.ticket?.queueId
+    },
+    "CreateMessageService: message persisted and websocket event emitted"
+  );
   
   io.to(`company-${companyId}-mainchannel`).emit(
     `company-${companyId}-contact`,

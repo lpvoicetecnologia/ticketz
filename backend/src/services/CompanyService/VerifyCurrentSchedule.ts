@@ -13,19 +13,38 @@ const VerifyCurrentSchedule = async (
   queueId?: string | number
 ): Promise<ScheduleResult> => {
   let schedule: OpenHoursData;
+
+  const normalizeSchedule = (raw: any): OpenHoursData | null => {
+    if (!raw) return null;
+
+    if (typeof raw === "string") {
+      try {
+        const parsed = JSON.parse(raw);
+        return normalizeSchedule(parsed);
+      } catch {
+        return null;
+      }
+    }
+
+    if (raw && typeof raw === "object" && Array.isArray(raw.weeklyRules) && Array.isArray(raw.overrides) && raw.timezone) {
+      return raw as OpenHoursData;
+    }
+
+    return null;
+  };
   if (queueId) {
     const queue = await Queue.findOne({ where: { id: queueId, companyId } });
     if (queue) {
-      schedule = queue.schedules;
+      schedule = normalizeSchedule(queue.schedules) as OpenHoursData;
     }
   } else if (companyId) {
     const company = await Company.findOne({ where: { id: companyId } });
     if (company) {
-      schedule = company.schedules;
+      schedule = normalizeSchedule(company.schedules) as OpenHoursData;
     }
   }
 
-  if (schedule.timezone) {
+  if (schedule?.timezone) {
     return { inActivity: checkOpenHours(schedule) };
   }
 
@@ -64,7 +83,13 @@ const VerifyCurrentSchedule = async (
               c.id,
               to_char(current_date, 'day') currentWeekday,
               (array_to_json(array_agg(s))->>0)::jsonb currentSchedule
-        FROM "Companies" c, jsonb_array_elements(c.schedules) s
+        FROM "Companies" c, jsonb_array_elements(
+          case
+            when jsonb_typeof(c.schedules) = 'array' then c.schedules
+            when jsonb_typeof(c.schedules) = 'object' then jsonb_build_array(c.schedules)
+            else '[]'::jsonb
+          end
+        ) s
         WHERE s->>'weekdayEn' like trim(to_char(current_date, 'day')) and c.id = :companyId
         GROUP BY 1, 2
       ) s      
@@ -112,7 +137,13 @@ const VerifyCurrentSchedule = async (
               q.id,
               to_char(current_date, 'day') currentWeekday,
               (array_to_json(array_agg(s))->>0)::jsonb currentSchedule
-        FROM "Queues" q, jsonb_array_elements(q.schedules) s
+        FROM "Queues" q, jsonb_array_elements(
+          case
+            when jsonb_typeof(q.schedules) = 'array' then q.schedules
+            when jsonb_typeof(q.schedules) = 'object' then jsonb_build_array(q.schedules)
+            else '[]'::jsonb
+          end
+        ) s
         WHERE s->>'weekdayEn' like trim(to_char(current_date, 'day')) and q.id = :queueId
         and q."companyId" = :companyId
         GROUP BY 1, 2

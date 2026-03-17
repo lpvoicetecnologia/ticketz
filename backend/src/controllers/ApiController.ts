@@ -9,6 +9,7 @@ import SendWaCloudMessage from "../services/WaCloudServices/SendWaCloudMessage";
 import SendInstagramMessage from "../services/InstagramServices/SendInstagramMessage";
 import SendTelegramMessage from "../services/TelegramServices/SendTelegramMessage";
 import SendEmailMessage from "../services/EmailServices/SendEmailMessage";
+import SendFacebookMessage from "../services/FacebookServices/SendFacebookMessage";
 
 export const startConversation = async (req: Request, res: Response): Promise<Response> => {
   const { companyId } = req;
@@ -71,6 +72,8 @@ export const startConversation = async (req: Request, res: Response): Promise<Re
         await SendWaCloudMessage({ body: message, ticket, userId });
       } else if (whatsapp.channel === "instagram") {
         await SendInstagramMessage({ body: message, ticket, userId });
+      } else if (whatsapp.channel === "facebook") {
+        await SendFacebookMessage({ body: message, ticket, userId });
       } else if (whatsapp.channel === "telegram") {
         await SendTelegramMessage({ body: message, ticket, userId });
       } else if (whatsapp.channel === "email") {

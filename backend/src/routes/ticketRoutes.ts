@@ -8,6 +8,8 @@ const ticketRoutes = express.Router();
 
 ticketRoutes.get("/tickets", isAuth, isCompliant, TicketController.index);
 
+ticketRoutes.get("/kanban", isAuth, isCompliant, TicketController.kanban);
+
 ticketRoutes.get(
   "/tickets/:ticketId",
   isAuth,

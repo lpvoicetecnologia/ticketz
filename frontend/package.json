@@ -35,6 +35,7 @@
     "qrcode.react": "^1.0.0",
     "query-string": "^7.0.0",
     "react": "^17.0.2",
+    "react-beautiful-dnd": "^13.1.1",
     "react-bootstrap": "^2.7.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-currency-format": "^1.1.0",

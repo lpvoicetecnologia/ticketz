@@ -39,6 +39,9 @@ class Plan extends Model<Plan> {
   connectionsInstagram: number;
 
   @Column
+  connectionsFacebook: number;
+
+  @Column
   connectionsTelegram: number;
 
   @Column
