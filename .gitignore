@@ -1,3 +1,17 @@
 .docker
 *~
 /.project
+
+# Logs e artefatos temporários locais
+*.log
+*_logs.txt
+*logs*.txt
+*startup*.txt
+*err*.txt
+docker_ps.txt
+backend/*_error.txt
+backend/build.log
+frontend/build_error.txt
+names.txt
+status.txt
+status2.txt

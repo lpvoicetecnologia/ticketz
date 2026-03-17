@@ -1,4 +1,4 @@
-FROM node:20-alpine as build-deps
+FROM node:20 AS build-deps
 
 WORKDIR /usr/src/app
 COPY . .
@@ -17,10 +17,10 @@ COPY --from=build-deps /usr/src/app/node_modules/@socket.io/admin-ui/ui/dist /va
 COPY nginx /etc/nginx
 
 CMD (echo "{" && while IFS='=' read -r name value; do \
-        printf '\t"%s": "%s"\n' "$name" "$value"; \
+    printf '\t"%s": "%s"\n' "$name" "$value"; \
     done < <(env) | sed '$!s/$/,/' && echo "}")  > /var/www/public/config.json \
     && if [ -n "$BACKEND_SERVICE" ]; then \
-        BACKEND_IP=$(getent hosts $BACKEND_SERVICE | awk '{ print $1 }') \
-        && echo "$BACKEND_IP backend" >> /etc/hosts; \
+    BACKEND_IP=$(getent hosts $BACKEND_SERVICE | awk '{ print $1 }') \
+    && echo "$BACKEND_IP backend" >> /etc/hosts; \
     fi \
     && nginx -g "daemon off;"
